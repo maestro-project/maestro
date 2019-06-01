@@ -31,5 +31,11 @@
 *.out
 *.app
 
+# Excutable
+maestro
+
 # Generated datasets
 *.csv
+
+# SCONS temp files
+.sconsign*

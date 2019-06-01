@@ -1,5 +1,5 @@
 ./maestro --verbose=true \
-          --DFSL_file='data/DFSL_description/test10.m' \
+          --DFSL_file='data/DFSL_description/Resnet34_IS.m' \
           --full_buffer=false \
           --noc_bw=64 \
           --noc_hop_latency=1 \
