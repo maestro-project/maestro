@@ -1,0 +1,25 @@
+./maestro --verbose=true \
+          --DFSL_file='data/DFSL_description/test10.m' \
+          --full_buffer=false \
+          --noc_bw=64 \
+          --noc_hop_latency=1 \
+          --noc_mc_support=true \
+          --num_pes=256 \
+          --num_pe_alus=1 \
+          --l1_size=32 \
+          --l2_size=512 \
+          --do_implicit_reduction=true \
+          --do_fg_sync=false \
+          --do_reduction_op=true \
+          --do_dse=false \
+          --print_design_space=true \
+          --min_num_PEs=32 \
+          --min_noc_bw=8 \
+          --max_num_PEs=8192 \
+          --max_noc_bw=128 \
+          --pe_tick=2 \
+          --bw_tick=128 \
+          --area_constraint=16000000 \
+          --power_constraint=450 \
+          --optimization_target=energy
+

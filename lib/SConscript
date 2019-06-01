@@ -1,0 +1,15 @@
+
+Import ('env')
+
+env.Append(CPPPATH = ['./lib/include/',
+                      './lib/include/DFSL',
+                      './lib/include/DSE',
+                      './lib/include/DFA',
+                      './lib/include/AHW-model',
+                      './lib/src/'])
+
+#env.Append(CXXFLAGS=['-std=c++17', '-lboost_program_options' ])
+env.Append(CXXFLAGS=['-std=c++17'])
+#env.Append(LINKFLAGS=['-lboost_program_options'])
+
+print "cc"
