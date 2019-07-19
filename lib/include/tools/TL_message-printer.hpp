@@ -29,18 +29,26 @@ namespace maestro {
   namespace TL {
     class MessagePrinter {
       public:
-        MessagePrinter(int lv) : print_lv_(lv) {
+        MessagePrinter(int target_lv) : print_lv_(target_lv) {
         }
 
-        void PrintMsg(int lv, std::string msg) {
+        void PrintMsg(int lv, std::string msg, bool change_line = true) {
           if(lv <= print_lv_) {
-            std::cout << msg << std::endl;
+            if(change_line) {
+              std::cout << msg << std::endl;
+            }
+            else {
+              std::cout << msg;
+            }
           }
         }
 
-      protected:
-        int print_lv_;
+        void SetPrintLv(int new_lv) {
+          print_lv_ = new_lv;
+        }
 
+      protected:
+        int print_lv_= 0;
     };
 
 

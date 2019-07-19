@@ -25,6 +25,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 //#define DEBUG_COST_ANALYSIS
 
+#include <iostream>
 #include <memory>
 #include <cmath>
 
@@ -63,7 +64,7 @@ namespace maestro {
           clusters_ = clusters;
         }
 
-        std::shared_ptr<std::vector<std::shared_ptr<CostAnalyisResults>>> AnalyzeEntireCluster(bool verbose = true) {
+        std::shared_ptr<std::vector<std::shared_ptr<CostAnalyisResults>>> AnalyzeEntireCluster(bool verbose = false) {
 
           std::shared_ptr<std::vector<std::shared_ptr<CostAnalyisResults>>> ret = std::make_shared<std::vector<std::shared_ptr<CostAnalyisResults>>>();
 
@@ -107,7 +108,7 @@ namespace maestro {
 
           int buffer_size_mult = do_double_buffering? 2 : 1;
 
-          auto results = std::make_shared<CostAnalyisResults>(cluster_idx);
+          auto results = std::make_shared<CostAnalyisResults>(clusters_->GetLayerType(), cluster_idx);
           results->UpdateNumSubClusters(target_cluster->GetNumClusters());
 
           /* Cost stats */
@@ -177,17 +178,29 @@ namespace maestro {
             }
 
             long num_partial_outputs = GetNumOutputs(output_tensors, reuse_analysis, iter_status, true, false);
+            long num_partial_outputs_min = GetNumOutputs(output_tensors, reuse_analysis, iter_status, true, false, CA::EstimationType::Min);
+            long num_partial_outputs_max = GetNumOutputs(output_tensors, reuse_analysis, iter_status, true, false, CA::EstimationType::Max);
+
             long num_partial_outputs_sp_edge = GetNumOutputs(output_tensors, reuse_analysis, iter_status, true, true);
             long num_target_outputs = GetNumOutputs(output_tensors, reuse_analysis, iter_status, false, false);
+            long num_target_outputs_min= GetNumOutputs(output_tensors, reuse_analysis, iter_status, false, false, CA::EstimationType::Min);
+            long num_target_outputs_max = GetNumOutputs(output_tensors, reuse_analysis, iter_status, false, false, CA::EstimationType::Max);
+
+
             if(num_partial_outputs == 0) {
               continue;
             }
 
             long ingress_spatial_traffic = 0;
+            long ingress_spatial_traffic_min = 0;
+            long ingress_spatial_traffic_max = 0;
+
             for(auto& tensor : *input_tensors) {
               auto dataclass = tensor->GetDataClass();
               int dataclass_id = static_cast<int>(tensor->GetDataClass());
               long upstream_read_this_tensor = GetSpatialTrafficSingleTensor(tensor, reuse_analysis, iter_status);
+              long upstream_read_this_tensor_min = GetSpatialTrafficSingleTensor(tensor, reuse_analysis, iter_status, CA::EstimationType::Min);
+              long upstream_read_this_tensor_max = GetSpatialTrafficSingleTensor(tensor, reuse_analysis, iter_status, CA::EstimationType::Max);
 
 #ifdef DEBUG_COST_ANALYSIS
               if(dataclass == DataClass::Weight) {
@@ -197,18 +210,44 @@ namespace maestro {
               if(dataclass == DataClass::Input) {
                 std::cout << "Input read: " << upstream_read_this_tensor << std::endl;
               }
+
+              std::cout << "[CostAnalysisEngine] Upstream read += " << num_case_occurrences << " * " <<  upstream_read_this_tensor << " = " << num_case_occurrences * upstream_read_this_tensor << std::endl;
 #endif
 
               //Buffer access count information update
               long prev_rd_count = results->GetBufferAccessCount(BufferType::Upstream, BufferAccessType::Read, dataclass);
+
               results->UpdateBufferAccessCount(BufferType::Upstream, BufferAccessType::Read, prev_rd_count + num_case_occurrences * upstream_read_this_tensor, dataclass);
 
-              long prev_downstream_wr_count = results->GetBufferAccessCount(BufferType::Downstream, BufferAccessType::Write, dataclass);
-              results->UpdateBufferAccessCount(BufferType::Downstream, BufferAccessType::Write, prev_downstream_wr_count + num_case_occurrences * upstream_read_this_tensor, dataclass);
-
-              ingress_spatial_traffic += upstream_read_this_tensor;
-
               long num_active_sub_clusters = GetNumActiveSubClusters(iter_status, target_cluster);
+
+              long prev_downstream_wr_count = results->GetBufferAccessCount(BufferType::Downstream, BufferAccessType::Write, dataclass);
+
+              bool is_sp_mapped = false;
+              auto coupled_dims = tensor->GetCoupledVariables();
+
+              for(auto& dim : *coupled_dims) {
+                if(dataflow->FindDirective(dim) != nullptr && dataflow->FindDirective(dim)->GetClass() == DFA::directive::DirectiveClass::SpatialMap ) {
+                  is_sp_mapped = true;
+                  break;
+                }
+              }
+
+
+              if(is_sp_mapped) {
+                auto first_sp_pe_load_volume = reuse_analysis->GetPELoadVolume(tensor,iter_status, true);
+                //auto rest_sp_pe_load_volume = reuse_analysis->GetPELoadVolume(tensor,iter_status, false);
+                results->UpdateBufferAccessCount(BufferType::Downstream, BufferAccessType::Write, prev_downstream_wr_count + num_case_occurrences * (first_sp_pe_load_volume  * num_active_sub_clusters), dataclass);
+              }
+              else {
+                auto pe_load_volume = reuse_analysis->GetPELoadVolume(tensor,iter_status, true);
+
+                results->UpdateBufferAccessCount(BufferType::Downstream, BufferAccessType::Write, prev_downstream_wr_count + num_case_occurrences * pe_load_volume * num_active_sub_clusters, dataclass);
+              }
+              ingress_spatial_traffic += upstream_read_this_tensor;
+              ingress_spatial_traffic_min += upstream_read_this_tensor_min;
+              ingress_spatial_traffic_max += upstream_read_this_tensor_max;
+
               long prev_downstream_rd_count = results->GetBufferAccessCount(BufferType::Downstream, BufferAccessType::Read, dataclass);
               results->UpdateBufferAccessCount(BufferType::Downstream, BufferAccessType::Read, prev_downstream_rd_count + num_active_sub_clusters * num_case_occurrences * num_partial_outputs, dataclass);
 
@@ -223,12 +262,17 @@ namespace maestro {
 #endif
 
             long egress_spatial_traffic = 0;
+            long egress_spatial_traffic_min = 0;
+            long egress_spatial_traffic_max = 0;
 
             for(auto& tensor : *output_tensors) {
               auto dataclass = tensor->GetDataClass();
               int dataclass_id = static_cast<int>(tensor->GetDataClass());
 
               long upstream_write_this_tensor = num_target_outputs;
+              long upstream_write_this_tensor_min = num_target_outputs_min;
+              long upstream_write_this_tensor_max = num_target_outputs_max;
+
               long num_active_sub_clusters = GetNumActiveSubClusters(iter_status, target_cluster);
 
               long downstream_write_this_tensor = num_partial_outputs;
@@ -240,6 +284,8 @@ namespace maestro {
               results->UpdateBufferAccessCount(BufferType::Downstream, BufferAccessType::Read, prev_downstream_rd_count + num_case_occurrences * downstream_read_this_tensor, dataclass);
 
               egress_spatial_traffic += upstream_write_this_tensor;
+              egress_spatial_traffic_min += upstream_write_this_tensor_min;
+              egress_spatial_traffic_max += upstream_write_this_tensor_max;
 
               if(iter_status_case_num == 0) {
                 results->UpdateBufferSizeReq(BufferType::Upstream, buffer_size_mult * upstream_write_this_tensor, dataclass);
@@ -254,6 +300,26 @@ namespace maestro {
             long egress_comm_delay = noc->GetOutStandingDelay(egress_spatial_traffic);
 
             long actual_delay = (do_double_buffering)? std::max( egress_comm_delay, std::max(comp_delay, ingress_comm_delay)) : ingress_comm_delay + comp_delay + egress_comm_delay;
+
+
+            long comp_delay_min = (sub_cluster_delay == 0)? static_cast<long>(std::ceil(
+                                static_cast<double>(num_partial_outputs_min) / static_cast<double>(num_simd_lanes_)))
+                              : sub_cluster_delay;
+            long ingress_comm_delay_min = noc->GetOutStandingDelay(ingress_spatial_traffic_min);
+            long egress_comm_delay_min = noc->GetOutStandingDelay(egress_spatial_traffic_min);
+
+            long actual_delay_min = (do_double_buffering)? std::max( egress_comm_delay_min, std::max(comp_delay_min, ingress_comm_delay_min)) : ingress_comm_delay_min + comp_delay_min + egress_comm_delay_min;
+
+
+            long comp_delay_max = (sub_cluster_delay == 0)? static_cast<long>(std::ceil(
+                                static_cast<double>(num_partial_outputs_max) / static_cast<double>(num_simd_lanes_)))
+                              : sub_cluster_delay;
+            long ingress_comm_delay_max = noc->GetOutStandingDelay(ingress_spatial_traffic_max);
+            long egress_comm_delay_max = noc->GetOutStandingDelay(egress_spatial_traffic_max);
+
+            long actual_delay_max = (do_double_buffering)? std::max( egress_comm_delay_max, std::max(comp_delay_max, ingress_comm_delay_max)) : ingress_comm_delay_max + comp_delay_max + egress_comm_delay_max;
+
+
 
             if(iter_status_case_num != 0) {
               peak_noc_bw_req = std::max(peak_noc_bw_req, std::max(ingress_spatial_traffic, egress_spatial_traffic));
@@ -279,7 +345,9 @@ namespace maestro {
 #endif
 
             // Log the run time
-            results->UpdateRuntime(results->GetRuntime() + num_case_occurrences * actual_delay);
+            results->UpdateRuntime(results->GetRuntime(CA::EstimationType::Exact) + num_case_occurrences * actual_delay, CA::EstimationType::Exact);
+            results->UpdateRuntime(results->GetRuntime(CA::EstimationType::Min) + num_case_occurrences * actual_delay_min, CA::EstimationType::Min);
+            results->UpdateRuntime(results->GetRuntime(CA::EstimationType::Max) + num_case_occurrences * comp_delay_max, CA::EstimationType::Max);
 
             long num_active_sub_clusters = GetNumActiveSubClusters(iter_status, target_cluster);
 
@@ -344,11 +412,12 @@ namespace maestro {
             std::shared_ptr<CA::ReuseAnalysis> reuse_analysis,
             std::shared_ptr<std::vector<IterationStatus>> iter_status,
             bool get_num_partial_sums = false,
-            bool is_sp_edge_pe = false) {
+            bool is_sp_edge_pe = false,
+            CA::EstimationType estimation_type = CA::EstimationType::Exact) {
           long num_outputs = 0;
 
           for(auto tensor: *output_tensors) {
-            num_outputs += reuse_analysis->GetNumOutputs(tensor, iter_status, get_num_partial_sums, is_sp_edge_pe);
+            num_outputs += reuse_analysis->GetNumOutputs(tensor, iter_status, get_num_partial_sums, is_sp_edge_pe, estimation_type);
           }
 
           return num_outputs;
@@ -410,7 +479,7 @@ namespace maestro {
                                std::shared_ptr<CA::ReuseAnalysis> reuse_analysis,
                                std::shared_ptr<std::vector<IterationStatus>> iter_status,
                                CA::EstimationType estimation_type = CA::EstimationType::Exact) {
-          return reuse_analysis->GetSpatialLoadVolume(tensor, iter_status);
+          return reuse_analysis->GetSpatialLoadVolume(tensor, iter_status, estimation_type);
         }
 
 
@@ -501,7 +570,7 @@ namespace maestro {
 
             //TODO: Need to consider overlapping dimensions
             if(directive->GetClass() == DFA::directive::DirectiveClass::TemporalMap) {
-              if(map_size == dim_size) {
+              if(map_size == dim_size) { //TODO: verify this
                 status_list->push_back(CA::IterationStatus::InitUnroll);
               }
               else if(map_size > dim_size) {
@@ -532,6 +601,24 @@ namespace maestro {
               if(first_sp_iteration_coverage == dim_size) {
                 status_list->push_back(CA::IterationStatus::InitUnroll);
               }
+              else if(first_sp_iteration_coverage > dim_size) {
+                status_list->push_back(CA::IterationStatus::InitEdge);
+              }
+              else {
+                int second_sp_itreation_coverage = 2 * (num_clusters-1) * ofs_size + ofs_size + map_size;
+
+                status_list->push_back(CA::IterationStatus::Init);
+
+                if(second_sp_itreation_coverage < dim_size) {
+                  status_list->push_back(CA::IterationStatus::Steady);
+                }
+
+                if((dim_size - map_size) % ofs_size != 0) {
+                  status_list->push_back(CA::IterationStatus::Edge);
+                }
+              }
+
+              /*
               else if(first_sp_iteration_coverage < dim_size) {
                 if(first_edge_sp_iteration_coverage > dim_size) {
                   status_list->push_back(CA::IterationStatus::InitEdgeSpEdge);
@@ -555,14 +642,15 @@ namespace maestro {
                   status_list->push_back(CA::IterationStatus::Steady);
                 }
 
-                /*  TODO
-                int second_last_sp_iteration_converage = dim_size % (num_clusters * ofs_size) - (map_size - ofs_size);
+                  TODO
+                //int second_last_sp_iteration_converage = dim_size % (num_clusters * ofs_size) - (map_size - ofs_size);
 
-                if(dim_size % ((num_clusters) * ofs_size) != 0) {
-                  status_list->push_back(CA::IterationStatus::Edge);
-                }
-*/
+                //if(dim_size % ((num_clusters) * ofs_size) != 0) {
+                //  status_list->push_back(CA::IterationStatus::Edge);
+                //}
+//
               }
+              */
             }
             else {
               this->error_handler_->PrintErrorMsg(TL::ErrorCode::InvalidCluster, std::to_string(target_cluster->GetClusterLevel()), this->GetName());
@@ -642,7 +730,6 @@ namespace maestro {
              }
            }
          }
-
 
 #ifdef DEBUG_COST_ANALYSIS
          std::cout << "Num cases: " << num_case_occurrences << std::endl;

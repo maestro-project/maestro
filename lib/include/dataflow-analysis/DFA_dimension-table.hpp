@@ -126,6 +126,29 @@ namespace maestro {
 					return dim_table_[targ]->GetSize();
 				}
 
+				int GetOuterStride(std::string targ) {
+
+          if(!this->HasVar(targ)) {
+            error_handler_->PrintErrorMsg(TL::ErrorCode::MissingDimension, targ);
+            error_handler_->TerminateProgram();
+          }
+
+          return dim_table_[targ]->GetOuterStride();
+
+				}
+
+        int GetInnerStride(std::string targ) {
+
+          if(!this->HasVar(targ)) {
+            error_handler_->PrintErrorMsg(TL::ErrorCode::MissingDimension, targ);
+            error_handler_->TerminateProgram();
+          }
+
+          return dim_table_[targ]->GetInnerStride();
+
+        }
+
+
 				void AddDimension(std::shared_ptr<LayerDimension> new_dimension) {
 				  dim_table_.insert(std::make_pair(new_dimension->GetName(), new_dimension));
 				}

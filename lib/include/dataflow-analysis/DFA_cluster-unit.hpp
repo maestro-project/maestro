@@ -384,16 +384,33 @@ namespace maestro {
           for(int idx = 0; idx < dataflow_->size();idx ++) {
 
             auto directive = dataflow_->at(idx);
-            auto mapped_dim = directive->GetVariable();
-            auto dim_size = dimensions_->GetSize(mapped_dim);
+            auto directive_dim = directive->GetVariable();
+            auto dim_size = dimensions_->GetSize(directive_dim);
             int num_iter_this_dim = 1;
 
+            if(dimensions_->IsOverlapped(directive_dim)) {
+              if(!dimensions_->IsSlidingDim(directive_dim)) {
+                auto sliding_dim = dimensions_->GetOverlappingDim(directive_dim);
+                auto sliding_dim_directive = dataflow_->FindDirective(directive_dim);
+                assert(sliding_dim_directive != nullptr);
+                auto sliding_dim_map_size = sliding_dim_directive->GetSize();
+                auto sliding_dim_size = dimensions_->GetSize(sliding_dim);
+
+                if(sliding_dim_map_size == sliding_dim_size) {
+                  dim_size = dim_size - sliding_dim_size + 1;
+                }
+              }
+            }
+
+/*
+            //TODO: Fix this hard-coded part
             if(mapped_dim == "X") {
               dim_size = dim_size - dimensions_->GetSize("S") +1;
             }
             else if(mapped_dim == "Y") {
               dim_size = dim_size - dimensions_->GetSize("R") +1;
             }
+*/
 
             if (directive->GetClass() == directive::DirectiveClass::TemporalMap) {
               num_iter_this_dim = dim_size/directive->GetOfs();
@@ -525,10 +542,14 @@ namespace maestro {
             this->error_handler_->PrintErrorMsg(TL::ErrorCode::NoSpatialMap, std::to_string(cluster_level_), this->GetName());
             this->error_handler_->TerminateProgram();
 				  }
+
+				  //TODO: Add another error check for invalid double spatial map
+
 				}
 
         //Get the index of the inner-most temporal map under the inner-most spatial map.
         // If no temporal map is under the inner-most spatial map, it returns the index to the inner-most spatial map
+				// TODO: FLAG! Needs to check the correctness
         void AnalyzeInnerTemporalMapIdx() {
           int inner_temporal_map_index = -1;
           int idx = 0;
@@ -546,7 +567,6 @@ namespace maestro {
 
           inner_temporal_map_idx_ = inner_temporal_map_index;
         }
-
 
         void AnalyzeNumSpatialIterations() {
           auto upper_spatial_map_directive = dataflow_->at(upper_spatial_map_idx_);
@@ -602,10 +622,31 @@ namespace maestro {
           // Note: It should be fine with overlapped dimensions (input column/row in conv) if the given dataflow is legal
           // Note: This is now handled below (beta version)
           int each_sp_iter_base_coverage = (sp_map_directive->GetOfs() * cluster_size_);
-          int each_sp_iter_full_coverage = (sp_map_directive->GetOfs() * cluster_size_) + sp_map_directive->GetSize();
+          int each_sp_iter_full_coverage = (sp_map_directive->GetOfs() * (cluster_size_-1)) + sp_map_directive->GetSize();
           //int eash_sp_iter_
 
-          num_steady_spatial_iterations_ = sp_dim_sz / each_sp_iter_base_coverage;
+//          num_steady_spatial_iterations_ = sp_dim_sz / each_sp_iter_base_coverage;
+          if(sp_dim_sz > each_sp_iter_full_coverage) {
+            auto sp_dim_to_cover_after_first_sp_iter = (sp_dim_sz-each_sp_iter_full_coverage);
+            num_steady_spatial_iterations_ = sp_dim_to_cover_after_first_sp_iter / each_sp_iter_base_coverage;
+            num_edge_spatial_iterations_ = (sp_dim_to_cover_after_first_sp_iter % each_sp_iter_base_coverage == 0)? 0 : 1;
+            num_spatial_edge_clusters_ = sp_dim_to_cover_after_first_sp_iter % each_sp_iter_base_coverage;
+
+          }
+          else {
+            num_steady_spatial_iterations_ = 0;
+            num_edge_spatial_iterations_ = 1;
+            if(sp_dim_sz > sp_map_directive->GetSize()) {
+              num_spatial_edge_clusters_ = (sp_dim_sz - sp_map_directive->GetSize()) / sp_map_directive->GetOfs();
+            }
+            else {
+              num_spatial_edge_clusters_ = 1;
+            }
+          }
+
+
+//          num_steady_spatial_iterations_ = sp_dim_sz / each_sp_iter_base_coverage;
+
 /*
  *  New version that deals with out-of-bound
  *  Currently buggy; rolled back to the original version
@@ -626,9 +667,10 @@ namespace maestro {
           num_spatial_edge_clusters_ = std::ceil(static_cast<double>(sp_dim_sz - final_iter_base_idx + 1 - sp_map_directive->GetSize()) / sp_map_directive->GetOfs()); // TODO: Dobule-check this
 */
           // Rolled back to the original version
+//          num_edge_spatial_iterations_ = (sp_dim_sz % each_sp_iter_base_coverage == 0)? 0 : 1;
+//          num_spatial_edge_clusters_ = (sp_dim_sz % each_sp_iter_base_coverage) / sp_map_directive->GetOfs();
 
-          num_edge_spatial_iterations_ = (sp_dim_sz % each_sp_iter_base_coverage == 0)? 0 : 1;
-          num_spatial_edge_clusters_ = (sp_dim_sz % each_sp_iter_base_coverage) / sp_map_directive->GetOfs();
+
 
           if(sp_dim_sz <= sp_map_directive->GetSize()) {
             num_spatial_edge_clusters_ = 1;
@@ -671,43 +713,7 @@ namespace maestro {
             }
 
           }
-
-          /* Deprecated version; hard-coded
-           *
-          int filter_channel = dataflow_->FindDirective("K")->GetSize();
-          int filter_height = dataflow_->FindDirective("R")->GetSize();
-          int filter_width = dataflow_->FindDirective("S")->GetSize();
-
-          int input_channel = dataflow_->FindDirective("C")->GetSize();
-          int input_height = dataflow_->FindDirective("Y")->GetSize();
-          int input_width = dataflow_->FindDirective("X")->GetSize();
-
-          int output_height = input_height - filter_height + 1;
-          int output_width = input_width - filter_width + 1;
-
-          output_height = (output_height <= 0) ? 1 : output_height;
-          output_width = (output_width <= 0) ? 1 : output_width;
-
-          if(input_height >= filter_height && input_width >= filter_width) {
-            num_pouts_ = filter_channel * input_channel * output_height * output_width * filter_height * filter_width;
-          }
-          else if(input_height < filter_height && input_width < filter_width) {
-            num_pouts_ = filter_channel * input_channel * filter_height * filter_width;
-
-          }
-          else if(input_height >= filter_height && input_width < filter_width) {
-            num_pouts_ = filter_channel * input_channel * output_height * filter_height * filter_width;
-          }
-          else if(input_height < filter_height && input_width >= filter_width) {
-            num_pouts_ = filter_channel * input_channel * output_width * filter_height * filter_width;
-          }
-          else {
-            std::cout << "Not supported case" << std::endl;
-            exit(-1);
-          }
-*/
-
-        }
+        } // End of void AnalyzeNumPartialOutputs()
 
         void Preprocess() {
           //Functions regarding spatial mapping always need to be called first

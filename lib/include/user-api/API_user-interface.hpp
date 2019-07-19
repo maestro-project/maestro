@@ -50,7 +50,7 @@ namespace maestro {
     public:
       API (std::shared_ptr<Configuration> config) :
         configuration_(config), num_macs_(0) {
-
+        message_printer_->PrintMsg(0, "[Warning] maestro::API is deprecated. Update to maestro::APIV2 is recommended.");
       }
 
       std::string GetNetworkName() {
@@ -110,7 +110,7 @@ namespace maestro {
           }
 
           auto cluster_analysis = std::make_shared<DFA::ClusterAnalysis>
-                                    (configuration_->num_pes_, configuration_->tensors_,
+                                    (LayerType::CONV, configuration_->num_pes_, configuration_->tensors_,
                                      dimension_table, dataflow, configuration_->nocs_);
           configuration_->cluster_analysis_->push_back(cluster_analysis);
         }
@@ -125,14 +125,36 @@ namespace maestro {
         std::cout << std::endl;
 
         long num_computations = results->GetNumComputations();
+        long num_abs_computations = results->GetTopNumComputations();
 
-        long double throughput = static_cast<double>(num_computations) / results->GetRuntime();
+        long double throughput = static_cast<double>(num_computations) / results->GetRuntime(CA::EstimationType::Exact);
+        long double throughput_min = static_cast<double>(num_computations) / results->GetRuntime(CA::EstimationType::Max);
+        long double throughput_max = static_cast<double>(num_computations) / results->GetRuntime(CA::EstimationType::Min);
+
+        long double abs_throughput = static_cast<double>(num_abs_computations) / results->GetRuntime(CA::EstimationType::Exact);
+        long double abs_throughput_min = static_cast<double>(num_abs_computations) / results->GetRuntime(CA::EstimationType::Max);
+        long double abs_throughput_max = static_cast<double>(num_abs_computations) / results->GetRuntime(CA::EstimationType::Min);
+
+
         std::cout << "Num MACs: " << num_computations << std::endl;
+        std::cout << "Num MACs (absolute): " << num_abs_computations << std::endl;
+
 
         std::cout << std::endl;
         std::cout << "[Performance Analysis]" << std::endl;
-        std::cout << "Runtime: " << results->GetRuntime() << " cycles" << std::endl;
+        std::cout << "Runtime: " << results->GetRuntime(CA::EstimationType::Exact) << " cycles" << std::endl;
+        std::cout << "Runtime(Min): " << results->GetRuntime(CA::EstimationType::Min) << " cycles" << std::endl;
+        std::cout << "Runtime(Max): " << results->GetRuntime(CA::EstimationType::Max) << " cycles" << std::endl;
+
         std::cout << "Throughput: " << throughput << " MACs/cycle" << std::endl;
+        std::cout << "Throughput(Min): " << throughput_min << " MACs/cycle" << std::endl;
+        std::cout << "Throughput(Max): " << throughput_max << " MACs/cycle" << std::endl;
+
+
+        std::cout << "AbsThroughput: " << abs_throughput << " MACs/cycle" << std::endl;
+        std::cout << "AbsThroughput(Min): " << abs_throughput_min << " MACs/cycle" << std::endl;
+        std::cout << "AbsThroughput(Max): " << abs_throughput_max << " MACs/cycle" << std::endl;
+
 
         std::cout << "[Buffer Access Analysis]" << std::endl;
 
@@ -266,6 +288,10 @@ namespace maestro {
         int layer_id = 0;
         for(auto layer : *(configuration_->network_)) {
           auto layer_results = AnalyzeCostAllClusters(layer_id, false, false);
+
+          long num_macs = this->GetNumPartialSums(layer_id);
+          layer_results->at(layer_results->size()-1)->UpdateTopNumComputations(num_macs);
+
           ret->push_back(layer_results); // Take the top level cluster results
           layer_id++;
         }
@@ -319,6 +345,16 @@ namespace maestro {
       long num_macs_;
 
     private:
+      long GetNumPartialSums(int layer_id) {
+        auto full_dimension = configuration_->network_->at(layer_id)->GetDimensions();
+        long ret = 1;
+        for(auto dim : *full_dimension) {
+          ret *= dim->GetSize();
+        }
+
+        return ret;
+      }
+
       //Output centric -> input centric
       std::shared_ptr<DFA::DimensionTable> ConstructDimensionTable(std::shared_ptr<std::vector<std::shared_ptr<DFA::LayerDimension>>> dimensions, bool verbose = false) {
         auto dimension_table = std::make_shared<DFA::DimensionTable>();

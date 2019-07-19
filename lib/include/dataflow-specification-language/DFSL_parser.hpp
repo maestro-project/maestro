@@ -28,6 +28,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include <fstream>
 #include <cstdlib>
 #include <memory>
+#include <map>
 
 #include<boost/tokenizer.hpp>
 #include<boost/format.hpp>
@@ -47,6 +48,7 @@ namespace maestro {
 
 		enum class ParserState{Idle, Network_Identifier, Network_Name, Network_Body,
 				                   Layer_Identifier, Layer_Name, Layer_Body, Layer_Type,
+				                   Stride_Decl, Stride_Body, Stride_Size,
 				                   Dimension_Decl, Dimension_Body, Dimension_Size,
 		                       Dataflow_Decl, Dataflow_Body, Dataflow_MapSize, Dataflow_MapOffset, Dataflow_MapVar, Dataflow_ClusterSize, Dataflow_ClusterType,
 		                       Accelerator_Identifier, Acclerator_Body,
@@ -88,585 +90,760 @@ namespace maestro {
 					int line_number = 1;
 
 //					network = std::make_shared<DFA::NeuralNetwork>();
+          std::shared_ptr<DFA::DirectiveTable> prev_directive_table = nullptr;
 					std::shared_ptr<DFA::DirectiveTable> directive_table = nullptr;
 
 					std::shared_ptr<DFA::Layer> curr_layer = nullptr;
 					std::shared_ptr<DFA::LayerDimension> curr_dim = nullptr;
 					std::shared_ptr<std::vector<std::shared_ptr<DFA::LayerDimension>>> dim_vector = nullptr;
 
+					std::shared_ptr<std::map<std::string, int>> stride_info = nullptr;
+
 					DFA::directive::DirectiveClass curr_directive_class = DFA::directive::DirectiveClass::Invalid;
 					std::shared_ptr<DFA::directive::Directive> curr_directive = nullptr;
+
+					std::string stride_dim;
 
 					int map_size = 0;
 					int map_offset = 0;
 					int cluster_size = 0;
+					bool had_dim_def = false;
+					bool get_dim_size = false;
+					int inner_stride = 1;
+					bool is_tr_conv = false;
 
+					LayerType layer_type;
 					std::string tmp_name;
 
 					while(std::getline(in_file_, line)) {
 						boost::tokenizer<boost::char_separator<char>> tokn(line, sep);
 						for(auto &tkn : tokn) {
 
-						  if(tkn.size() > 2 && tkn.substr(0,2) == DFSL::comments_) {
-						    continue;
+						  if(tkn.size() >= 2 && tkn.substr(0,2) == DFSL::comments_) {
+                line_number++;
+						    break;
 						  }
 
-//							std::cout << " Current line: " << std::to_string(line_number) << " " << "Token: " << tkn << std::endl;
 							switch(state_) {
-							case ParserState::Idle: {
-								if(tkn == DFSL::network_decl_) {
-									state_ = ParserState::Network_Identifier;
-								}
-								else if(tkn == DFSL::accelerator_decl_) {
-								  state_ = ParserState::Accelerator_Identifier;
-								}
-								break;
-							}
-
-							case ParserState::Network_Identifier: {
-
-								//Doesn't have to give a network name
-								if(tkn == DFSL::brace_open_) {
-									state_ = ParserState::Network_Body;
-								}
-								else if(!tkn.empty()) {
-									network->SetName(tkn);
-								}
-								else {
-									ParseError(line_number);
-								}
-
-								break;
-							}
-
-							case ParserState::Network_Body: {
-								if(tkn == DFSL::brace_close_) {
-									state_ = ParserState::Idle;
-								}
-								else if (tkn == DFSL::layer_decl_) {
-									state_ = ParserState::Layer_Identifier;
-								}
-								else {
-									ParseError(line_number);
-								}
-								break;
-							}
-
-							case ParserState::Layer_Identifier: {
-								if(tkn == DFSL::brace_open_) {
-									dim_vector = std::make_shared<std::vector<std::shared_ptr<DFA::LayerDimension>>>();
-									directive_table = std::make_shared<DFA::DirectiveTable>();
-									state_ = ParserState::Layer_Body;
-								}
-								else {
-									tmp_name = tkn;
-								}
-								break;
-							}
-
-							case ParserState::Layer_Body: {
-								if(tkn == DFSL::brace_close_) {
-									if(curr_layer == nullptr) {
-										ParseError(line_number);
-									}
-
-									curr_layer->SetDimensions(dim_vector);
-									curr_layer->SetDataflow(directive_table);
-									network->AddLayer(curr_layer);
-
-									dim_vector = nullptr;
-									directive_table = nullptr;
-									curr_layer = nullptr;
-									state_ = ParserState::Network_Body;
-								}
-								else if(tkn == DFSL::layer_type_decl_) {
-									state_ = ParserState::Layer_Type;
-								}
-								else if(tkn == DFSL::layer_dim_decl_) {
-									state_ = ParserState::Dimension_Decl;
-								}
-								else if(tkn == DFSL::layer_dataflow_decl_) {
-									state_ = ParserState::Dataflow_Decl;
-								}
-								else {
-									ParseError(line_number);
-								}
-
-								break;
-							}
-
-							case ParserState::Layer_Type: {
-								if(tkn == DFSL::layer_type_conv_) {
-									if(!tmp_name.empty()) {
-										curr_layer = std::make_shared<DFA::ConvLayer>(tmp_name);
-										tmp_name.clear();
-									}
-									else {
-										curr_layer = std::make_shared<DFA::ConvLayer>(DFSL::layer_decl_);
-									}
-								}
-								else if(tkn == DFSL::layer_type_fc_) {
-									//TODO
-								}
-								else if(tkn == DFSL::layer_type_dsconv_) {
-									//TODO
-								}
-								else if(tkn == DFSL::layer_type_lstm_) {
-									//TODO
-								}
-								else if(tkn == DFSL::layer_type_pool_) {
-									//TODO
-								}
-								else if(tkn == DFSL::layer_type_trconv_) {
-									//TODO
-								}
-								else {
-									ParseError(line_number);
-								}
-								state_ = ParserState::Layer_Body;
-
-								break;
-							}
-
-							case ParserState::Dimension_Decl: {
-								if(tkn == DFSL::brace_open_) {
-									state_ = ParserState::Dimension_Body;
-								}
-								else {
-									ParseError(line_number);
-								}
-								break;
-							}
-
-							case ParserState::Dimension_Body: {
-								if(tkn == DFSL::brace_close_) {
-									state_ = ParserState::Layer_Body;
-								}
-								else {
-									if(!tkn.empty()) {
-										tmp_name = tkn;
-									}
-									else {
-										ParseError(line_number);
-									}
-									state_ = ParserState::Dimension_Size;
-								}
-								break;
-							}
-
-							case ParserState::Dimension_Size: {
-								int size = std::atoi(tkn.c_str());
-								if(size == 0) {
-									ParseError(line_number);
-								}
-								else {
-									curr_dim = std::make_shared<DFA::LayerDimension> (tmp_name, size, 1);
-									dim_vector->push_back(curr_dim);
-									state_ = ParserState::Dimension_Body;
-								}
-								break;
-							}
-							case ParserState::Dataflow_Decl: {
-								if(tkn == DFSL::brace_open_) {
-									state_ = ParserState::Dataflow_Body;
-								}
-								else {
-									ParseError(line_number);
-								}
-								break;
-							}
-
-							case ParserState::Dataflow_Body: {
-								if(tkn == DFSL::brace_close_) {
-									state_ = ParserState::Layer_Body;
-								}
-								else if(tkn == DFSL::dataflow_temporal_map_) {
-									curr_directive_class = DFA::directive::DirectiveClass::TemporalMap;
-									state_ = ParserState::Dataflow_MapSize;
-								}
-								else if(tkn == DFSL::dataflow_spatial_map_) {
-									curr_directive_class = DFA::directive::DirectiveClass::SpatialMap;
-									state_ = ParserState::Dataflow_MapSize;
-								}
-								else if(tkn == DFSL::dataflow_cluster_) {
-									curr_directive_class = DFA::directive::DirectiveClass::Cluster;
-									state_ = ParserState::Dataflow_ClusterSize;
-								}
-								else {
-									ParseError(line_number);
-								}
-								break;
-							}
-
-							case ParserState::Dataflow_MapSize: {
-								map_size = std::atoi(tkn.c_str());
-
-								if(map_size == 0) {
-									ParseError(line_number);
-								}
-
-								state_ = ParserState::Dataflow_MapOffset;
-								break;
-							}
-
-							case ParserState::Dataflow_MapOffset: {
-								map_offset = std::atoi(tkn.c_str());
-
-								if(map_offset == 0) {
-									ParseError(line_number);
-								}
-
-								state_ = ParserState::Dataflow_MapVar;
-								break;
-							}
-
-							case ParserState::Dataflow_MapVar: {
-								if(tkn.empty()) {
-									ParseError(line_number);
-								}
-
-								switch(curr_directive_class) {
-								case DFA::directive::DirectiveClass::TemporalMap: {
-									curr_directive = std::make_shared<DFA::directive::TemporalMap> (map_size, map_offset, tkn);
-									break;
-								}
-								case DFA::directive::DirectiveClass::SpatialMap: {
-									curr_directive = std::make_shared<DFA::directive::SpatialMap> (map_size, map_offset, tkn);
-									break;
-								}
-								default: {
-									ParseError(line_number);
-								}
-								}
-
-								directive_table->AddDirective(curr_directive);
-								curr_directive = nullptr;
-								state_=ParserState::Dataflow_Body;
-								break;
-							}
-
-							case ParserState::Dataflow_ClusterSize: {
-								cluster_size = std::atoi(tkn.c_str());
-
-								if(cluster_size == 0) {
-									ParseError(line_number);
-								}
-
-								state_ = ParserState::Dataflow_ClusterType;
-								break;
-							}
-
-							case ParserState::Dataflow_ClusterType: {
-
-								if(tkn == DFSL::dataflow_cluster_type_logical_) {
-									curr_directive = std::make_shared<DFA::directive::Cluster>(cluster_size, DFA::directive::ClusterType::Logical);
-								}
-								else if(tkn == DFSL::dataflow_cluster_type_physical_) {
-									curr_directive = std::make_shared<DFA::directive::Cluster>(cluster_size, DFA::directive::ClusterType::Physical);
-								}
-
-								directive_table->AddDirective(curr_directive);
-								curr_directive = nullptr;
-								state_=ParserState::Dataflow_Body;
-								break;
-							}
-
-							case ParserState::Accelerator_Identifier: {
-							  if(tkn == DFSL::brace_open_) {
-							    state_ = ParserState::Acclerator_Body;
-							  }
-							  else {
-							    ParseError(line_number);
-							  }
-							  break;
-							}
-
-							case ParserState::Acclerator_Body: {
-							  if(tkn == DFSL::pe_decl_) {
-							    state_ = ParserState::PE_Identifier;
-							  }
-							  else if(tkn == DFSL::buffer_decl_) {
-							    state_ = ParserState::Buffer_Identifier;
-							  }
-							  else if(tkn == DFSL::noc_decl_) {
-							    state_ = ParserState::NoC_Identifier;
-							  }
-							  else {
-							    ParseError(line_number);
-							  }
-							  break;
-							}
-
-							case ParserState::PE_Identifier: {
-							  if(tkn == DFSL::brace_open_) {
-							    state_ = ParserState::PE_Body;
-							  }
-							  else {
-							    //TODO: Add an error message
-							    ParseError(line_number);
-							  }
-							  break;
-							}
-
-              case ParserState::Buffer_Identifier: {
-                if(tkn == DFSL::brace_open_) {
-                  state_ = ParserState::Buffer_Body;
-                }
-                else {
-                  //TODO: Add an error message
-                  ParseError(line_number);
-                }
-                break;
-              }
-
-							case ParserState::PE_Body: {
-							    if(tkn == DFSL::num_pe_decl_) {
-							      state_ = ParserState::PE_NumPE;
-							      break;
-							    }
-							    else if(tkn == DFSL::vector_width_decl_) {
-                    state_ = ParserState::PE_VectorWidth;
-                    break;
+							  case ParserState::Idle: {
+                  if(tkn == DFSL::network_decl_) {
+                    state_ = ParserState::Network_Identifier;
                   }
-							    else if(tkn == DFSL::mult_precision_decl_) {
-                    state_ = ParserState::PE_MultPrecision;
-                    break;
+                  else if(tkn == DFSL::accelerator_decl_) {
+                    state_ = ParserState::Accelerator_Identifier;
                   }
-							    else if(tkn == DFSL::add_precision_decl_) {
-                    state_ = ParserState::PE_AddPrecision;
-                    break;
+                  break;
+							  }
+
+                case ParserState::Network_Identifier: {
+
+                  //Doesn't have to give a network name
+                  if(tkn == DFSL::brace_open_) {
+                    state_ = ParserState::Network_Body;
                   }
-							    else if(tkn == DFSL::vector_width_decl_) {
-                    state_ = ParserState::PE_VectorWidth;
-                    break;
+                  else if(!tkn.empty()) {
+                    network->SetName(tkn);
                   }
-							    else if(tkn == DFSL::brace_close_) {
-                    state_ = ParserState::Acclerator_Body;
-                    break;
-                  }
-							    else {
+                  else {
                     ParseError(line_number);
                   }
 
-							  break;
-							}
-
-							case ParserState::PE_NumPE: {
-                int num_pes = std::atoi(tkn.c_str());
-                if(num_pes < 1) {
-                  std::cout << "The number of PEs needs to be an integer larger than 0. Given number of PEs: "
-                      << num_pes << std::endl;
-                  ParseError(line_number);
+                  break;
                 }
-                else {
-                  num_pes_ = num_pes;
+
+                case ParserState::Network_Body: {
+                  if(tkn == DFSL::brace_close_) {
+                    state_ = ParserState::Idle;
+                  }
+                  else if (tkn == DFSL::layer_decl_) {
+                    state_ = ParserState::Layer_Identifier;
+                  }
+                  else {
+                    ParseError(line_number);
+                  }
+                  break;
+                }
+
+                case ParserState::Layer_Identifier: {
+                  if(tkn == DFSL::brace_open_) {
+                    dim_vector = std::make_shared<std::vector<std::shared_ptr<DFA::LayerDimension>>>();
+                    directive_table = std::make_shared<DFA::DirectiveTable>();
+                    stride_info = std::make_shared<std::map<std::string, int>>();
+                    state_ = ParserState::Layer_Body;
+                  }
+                  else {
+                    tmp_name = tkn;
+                  }
+                  break;
+                }
+
+                case ParserState::Layer_Body: {
+                  if(tkn == DFSL::brace_close_) {
+                    if(curr_layer == nullptr) {
+                      ParseError(line_number);
+                    }
+                    curr_layer->SetDimensions(dim_vector);
+
+                    if(directive_table->size() == 0) {
+                      directive_table = std::make_shared<DFA::DirectiveTable>(*prev_directive_table);
+                      curr_layer->SetDataflow(directive_table);
+                      prev_directive_table = directive_table;
+                    }
+                    else {
+                      curr_layer->SetDataflow(directive_table);
+                      prev_directive_table = std::make_shared<DFA::DirectiveTable>(*directive_table);
+                    }
+                    curr_layer->SetLayerType(layer_type);
+
+                    network->AddLayer(curr_layer);
+
+                    layer_type = LayerType::NumLayerTypes;
+                    inner_stride = 1;
+                    is_tr_conv = false;
+                    dim_vector = nullptr;
+                    directive_table = nullptr;
+                    curr_layer = nullptr;
+                    stride_info = nullptr;
+                    had_dim_def = false;
+                    state_ = ParserState::Network_Body;
+                  }
+                  else if(tkn == DFSL::layer_type_decl_) {
+                    state_ = ParserState::Layer_Type;
+                  }
+                  else if(tkn == DFSL::layer_stride_decl_) {
+                    if(had_dim_def) {
+                      std::cout << "[Error] Stride description must precede to dimension description" << std::endl;
+                      ParseError(line_number);
+                    }
+                    else {
+                      state_ = ParserState::Stride_Decl;
+                    }
+                  }
+                  else if(tkn == DFSL::layer_dim_decl_) {
+                    had_dim_def = true;
+                    state_ = ParserState::Dimension_Decl;
+                  }
+                  else if(tkn == DFSL::layer_dataflow_decl_) {
+                    state_ = ParserState::Dataflow_Decl;
+                  }
+                  else {
+                    ParseError(line_number);
+                  }
+
+                  break;
+                }
+
+                case ParserState::Stride_Decl: {
+                  if(tkn == DFSL::brace_open_) {
+                    state_ = ParserState::Stride_Body;
+                  }
+                  else {
+                    std::cout << "[Error] Syntax error; stride description: Stride {dim1: sz, dim2: sz, ...}. " << std::endl;
+                    ParseError(line_number);
+                  }
+
+                  break;
+                }
+
+                case ParserState::Stride_Body: {
+                  if(tkn == DFSL::brace_close_) {
+                    state_ = ParserState::Layer_Body;
+                  }
+                  else {
+                    stride_dim = tkn;
+                    state_ = ParserState::Stride_Size;
+                  }
+
+                  break;
+                }
+
+                case ParserState::Stride_Size: {
+                  int stride = std::atoi(tkn.c_str());
+                  if(stride < 1) {
+                    std::cout << "[Error] Stride must be a positive integer value" << std::endl;
+                    ParseError(line_number);
+                  }
+                  else {
+                    (*stride_info)[stride_dim] = stride;
+                    state_ = ParserState::Stride_Body;
+                  }
+                  break;
+                }
+
+
+                case ParserState::Layer_Type: {
+                  if(tkn == DFSL::layer_type_conv_) {
+                    if(!tmp_name.empty()) {
+                      curr_layer = std::make_shared<DFA::ConvLayer>(tmp_name);
+                      tmp_name.clear();
+                    }
+                    else {
+                      curr_layer = std::make_shared<DFA::ConvLayer>(DFSL::layer_decl_);
+                    }
+                    layer_type = LayerType::CONV;
+                  }
+                  else if(tkn == DFSL::layer_type_fc_) {
+                    //TODO
+                  }
+                  else if(tkn == DFSL::layer_type_dsconv_) {
+                    if(!tmp_name.empty()) {
+                      curr_layer = std::make_shared<DFA::DSConvLayer>(tmp_name);
+                      tmp_name.clear();
+                    }
+                    else {
+                      curr_layer = std::make_shared<DFA::DSConvLayer>(DFSL::layer_decl_);
+                    }
+                    layer_type = LayerType::DSCONV;
+                  }
+                  else if(tkn == DFSL::layer_type_ngconv_) {
+                    if(!tmp_name.empty()) {
+                      curr_layer = std::make_shared<DFA::NGConvLayer>(tmp_name);
+                      tmp_name.clear();
+                    }
+                    else {
+                      curr_layer = std::make_shared<DFA::NGConvLayer>(DFSL::layer_decl_);
+                    }
+                    layer_type = LayerType::NGCONV;
+                  }
+                  else if(tkn == DFSL::layer_type_lstm_) {
+                    //TODO
+                  }
+                  else if(tkn == DFSL::layer_type_pool_) {
+                    //TODO
+                  }
+                  else if(tkn == DFSL::layer_type_trconv_) {
+                    if(!tmp_name.empty()) {
+                      curr_layer = std::make_shared<DFA::ConvLayer>(tmp_name);
+                      tmp_name.clear();
+                    }
+                    else {
+                      curr_layer = std::make_shared<DFA::ConvLayer>(DFSL::layer_decl_);
+                    }
+                    is_tr_conv = true;
+                    inner_stride = 2; //TODO: Fix this hard-coded one
+                    layer_type = LayerType::CONV;
+                    //TODO
+                  }
+                  else {
+                    ParseError(line_number);
+                  }
+                  state_ = ParserState::Layer_Body;
+
+                  break;
+                }
+
+                case ParserState::Dimension_Decl: {
+                  if(tkn == DFSL::brace_open_) {
+                    state_ = ParserState::Dimension_Body;
+                  }
+                  else {
+                    ParseError(line_number);
+                  }
+                  break;
+                }
+
+                case ParserState::Dimension_Body: {
+                  if(tkn == DFSL::brace_close_) {
+                    state_ = ParserState::Layer_Body;
+                  }
+                  else {
+                    if(!tkn.empty()) {
+                      tmp_name = tkn;
+                    }
+                    else {
+                      ParseError(line_number);
+                    }
+                    state_ = ParserState::Dimension_Size;
+                  }
+                  break;
+                }
+
+                case ParserState::Dimension_Size: {
+                  int size = std::atoi(tkn.c_str());
+                  if(size == 0) {
+                    ParseError(line_number);
+                  }
+                  else {
+
+                    int stride_size = 1;
+                    if(stride_info->find(tmp_name) != stride_info->end()) {
+                      stride_size = (*stride_info)[tmp_name];
+                    }
+
+                    curr_dim = std::make_shared<DFA::LayerDimension> (tmp_name, size, stride_size, inner_stride);
+                    dim_vector->push_back(curr_dim);
+                    state_ = ParserState::Dimension_Body;
+                  }
+                  break;
+                }
+                case ParserState::Dataflow_Decl: {
+                  if(tkn == DFSL::brace_open_) {
+                    state_ = ParserState::Dataflow_Body;
+                  }
+                  else {
+                    ParseError(line_number);
+                  }
+                  break;
+                }
+
+                case ParserState::Dataflow_Body: {
+                  if(tkn == DFSL::brace_close_) {
+                    state_ = ParserState::Layer_Body;
+                  }
+                  else if(tkn == DFSL::dataflow_temporal_map_) {
+                    curr_directive_class = DFA::directive::DirectiveClass::TemporalMap;
+                    state_ = ParserState::Dataflow_MapSize;
+                  }
+                  else if(tkn == DFSL::dataflow_spatial_map_) {
+                    curr_directive_class = DFA::directive::DirectiveClass::SpatialMap;
+                    state_ = ParserState::Dataflow_MapSize;
+                  }
+                  else if(tkn == DFSL::dataflow_cluster_) {
+                    curr_directive_class = DFA::directive::DirectiveClass::Cluster;
+                    state_ = ParserState::Dataflow_ClusterSize;
+                  }
+                  else {
+                    ParseError(line_number);
+                  }
+                  break;
+                }
+
+                case ParserState::Dataflow_MapSize: {
+
+                  if(tkn == DFSL::dataflow_dim_size_indicatior_) {
+                    get_dim_size = true;
+                    continue;
+                  }
+
+                  if(get_dim_size) {
+                    map_size = -1;
+
+                    for(auto& dim_info : *dim_vector) {
+                      if(dim_info->GetName() == tkn) {
+                        map_size = dim_info->GetSize();
+                      }
+                    }
+
+                    if(map_size == -1) { // If not found
+                      std::cout << "[Error] Cannot find the dimension " << tkn << "from dimension description" << std::endl;
+                      ParseError(line_number);
+                    }
+                  }
+                  else {
+                    map_size = std::atoi(tkn.c_str());
+                  }
+
+                  if(map_size <= 0) {
+                    ParseError(line_number);
+                  }
+
+                  get_dim_size = false;
+                  state_ = ParserState::Dataflow_MapOffset;
+                  break;
+                }
+
+                case ParserState::Dataflow_MapOffset: {
+                  if(tkn == DFSL::dataflow_dim_size_indicatior_) {
+                    get_dim_size = true;
+                    continue;
+                  }
+
+                  if(get_dim_size) {
+                    map_offset = -1;
+
+                    for(auto& dim_info : *dim_vector) {
+                      if(dim_info->GetName() == tkn) {
+                        map_offset = dim_info->GetSize();
+                      }
+                    }
+
+                    if(map_size == -1) { // If not found
+                      std::cout << "[Error] Cannot find the dimension " << tkn << "from dimension description" << std::endl;
+                      ParseError(line_number);
+                    }
+                  }
+                  else {
+                    map_offset = std::atoi(tkn.c_str());
+                  }
+
+                  if(map_offset <= 0) {
+                    ParseError(line_number);
+                  }
+
+                  get_dim_size = false;
+                  state_ = ParserState::Dataflow_MapVar;
+                  break;
+                }
+
+                case ParserState::Dataflow_MapVar: {
+                  if(tkn.empty()) {
+                    ParseError(line_number);
+                  }
+
+                  switch(curr_directive_class) {
+                  case DFA::directive::DirectiveClass::TemporalMap: {
+                    curr_directive = std::make_shared<DFA::directive::TemporalMap> (map_size, map_offset, tkn);
+                    break;
+                  }
+                  case DFA::directive::DirectiveClass::SpatialMap: {
+                    curr_directive = std::make_shared<DFA::directive::SpatialMap> (map_size, map_offset, tkn);
+                    break;
+                  }
+                  default: {
+                    ParseError(line_number);
+                  }
+                  }
+
+                  directive_table->AddDirective(curr_directive);
+                  curr_directive = nullptr;
+                  state_=ParserState::Dataflow_Body;
+                  break;
+                }
+
+                case ParserState::Dataflow_ClusterSize: {
+                  if(tkn == DFSL::dataflow_dim_size_indicatior_) {
+                    get_dim_size = true;
+                    continue;
+                  }
+
+                  if(get_dim_size) {
+                    cluster_size = -1;
+
+                    for(auto& dim_info : *dim_vector) {
+                      if(dim_info->GetName() == tkn) {
+                        cluster_size = dim_info->GetSize();
+                      }
+                    }
+
+                    if(map_size == -1) { // If not found
+                      std::cout << "[Error] Cannot find the dimension " << tkn << "from dimension description" << std::endl;
+                      ParseError(line_number);
+                    }
+                  }
+                  else {
+                    cluster_size = std::atoi(tkn.c_str());
+                  }
+
+                  if(cluster_size <= 0) {
+                    ParseError(line_number);
+                  }
+
+                  get_dim_size = false;
+                  state_ = ParserState::Dataflow_ClusterType;
+                  break;
+                }
+
+                case ParserState::Dataflow_ClusterType: {
+
+                  if(tkn == DFSL::dataflow_cluster_type_logical_) {
+                    curr_directive = std::make_shared<DFA::directive::Cluster>(cluster_size, DFA::directive::ClusterType::Logical);
+                  }
+                  else if(tkn == DFSL::dataflow_cluster_type_physical_) {
+                    curr_directive = std::make_shared<DFA::directive::Cluster>(cluster_size, DFA::directive::ClusterType::Physical);
+                  }
+
+                  directive_table->AddDirective(curr_directive);
+                  curr_directive = nullptr;
+                  state_=ParserState::Dataflow_Body;
+                  break;
+                }
+
+                case ParserState::Accelerator_Identifier: {
+                  if(tkn == DFSL::brace_open_) {
+                    state_ = ParserState::Acclerator_Body;
+                  }
+                  else {
+                    ParseError(line_number);
+                  }
+                  break;
+                }
+
+                case ParserState::Acclerator_Body: {
+                  if(tkn == DFSL::pe_decl_) {
+                    state_ = ParserState::PE_Identifier;
+                  }
+                  else if(tkn == DFSL::buffer_decl_) {
+                    state_ = ParserState::Buffer_Identifier;
+                  }
+                  else if(tkn == DFSL::noc_decl_) {
+                    state_ = ParserState::NoC_Identifier;
+                  }
+                  else {
+                    ParseError(line_number);
+                  }
+                  break;
+                }
+
+                case ParserState::PE_Identifier: {
+                  if(tkn == DFSL::brace_open_) {
+                    state_ = ParserState::PE_Body;
+                  }
+                  else {
+                    //TODO: Add an error message
+                    ParseError(line_number);
+                  }
+                  break;
+                }
+
+                case ParserState::Buffer_Identifier: {
+                  if(tkn == DFSL::brace_open_) {
+                    state_ = ParserState::Buffer_Body;
+                  }
+                  else {
+                    //TODO: Add an error message
+                    ParseError(line_number);
+                  }
+                  break;
+                }
+
+                case ParserState::PE_Body: {
+                    if(tkn == DFSL::num_pe_decl_) {
+                      state_ = ParserState::PE_NumPE;
+                      break;
+                    }
+                    else if(tkn == DFSL::vector_width_decl_) {
+                      state_ = ParserState::PE_VectorWidth;
+                      break;
+                    }
+                    else if(tkn == DFSL::mult_precision_decl_) {
+                      state_ = ParserState::PE_MultPrecision;
+                      break;
+                    }
+                    else if(tkn == DFSL::add_precision_decl_) {
+                      state_ = ParserState::PE_AddPrecision;
+                      break;
+                    }
+                    else if(tkn == DFSL::vector_width_decl_) {
+                      state_ = ParserState::PE_VectorWidth;
+                      break;
+                    }
+                    else if(tkn == DFSL::brace_close_) {
+                      state_ = ParserState::Acclerator_Body;
+                      break;
+                    }
+                    else {
+                      ParseError(line_number);
+                    }
+
+                  break;
+                }
+
+                case ParserState::PE_NumPE: {
+                  int num_pes = std::atoi(tkn.c_str());
+                  if(num_pes < 1) {
+                    std::cout << "The number of PEs needs to be an integer larger than 0. Given number of PEs: "
+                        << num_pes << std::endl;
+                    ParseError(line_number);
+                  }
+                  else {
+                    num_pes_ = num_pes;
+                    state_ = ParserState::PE_Body;
+                  }
+                  break;
+                }
+
+                case ParserState::PE_VectorWidth: {
+                  int vector_width = std::atoi(tkn.c_str());
+                  if(vector_width < 1) {
+                    std::cout << "The number ALUs (vector width) of PEs needs to be an integer larger than 0. Given size: "
+                        << vector_width << std::endl;
+                    ParseError(line_number);
+                  }
+                  else {
+                    pe_vector_width_ = vector_width;
+                    state_ = ParserState::PE_Body;
+                  }
+
+                  break;
+                }
+
+                case ParserState::PE_MultPrecision: {
+                  if(tkn == DFSL::fp4_precision) {
+                    mult_op_type_ = DSE::OpType::FloatPoint;
+                    mult_precision_ = 4;
+                  }
+                  else if(tkn == DFSL::fp8_precision) {
+                    mult_op_type_ = DSE::OpType::FloatPoint;
+                    mult_precision_ = 8;
+                  }
+                  else if(tkn == DFSL::fp16_precision) {
+                    mult_op_type_ = DSE::OpType::FloatPoint;
+                    mult_precision_ = 16;
+                  }
+                  else if(tkn == DFSL::fp32_precision) {
+                    mult_op_type_ = DSE::OpType::FloatPoint;
+                    mult_precision_ = 32;
+                  }
+                  else if(tkn == DFSL::int4_precision) {
+                    mult_op_type_ = DSE::OpType::FixedPoint;
+                    mult_precision_ = 4;
+                  }
+                  else if(tkn == DFSL::int8_precision) {
+                    mult_op_type_ = DSE::OpType::FixedPoint;
+                    mult_precision_ = 8;
+                  }
+                  else if(tkn == DFSL::int16_precision) {
+                    mult_op_type_ = DSE::OpType::FixedPoint;
+                    mult_precision_ = 16;
+                  }
+                  else if(tkn == DFSL::int32_precision) {
+                    mult_op_type_ = DSE::OpType::FixedPoint;
+                    mult_precision_ = 32;
+                  }
+                  else {
+                    std::cout << "Unsupported precision!" << std::endl;
+                    ParseError(line_number);
+                  }
+
                   state_ = ParserState::PE_Body;
+                  break;
                 }
-                break;
-							}
 
-							case ParserState::PE_VectorWidth: {
-							  int vector_width = std::atoi(tkn.c_str());
-                if(vector_width < 1) {
-                  std::cout << "The number ALUs (vector width) of PEs needs to be an integer larger than 0. Given size: "
-                      << vector_width << std::endl;
-                  ParseError(line_number);
-                }
-                else {
-                  pe_vector_width_ = vector_width;
+                case ParserState::PE_AddPrecision: {
+                  if(tkn == DFSL::fp4_precision) {
+                    add_op_type_ = DSE::OpType::FloatPoint;
+                    add_precision_ = 4;
+                  }
+                  else if(tkn == DFSL::fp8_precision) {
+                    add_op_type_ = DSE::OpType::FloatPoint;
+                    add_precision_ = 8;
+                  }
+                  else if(tkn == DFSL::fp16_precision) {
+                    add_op_type_ = DSE::OpType::FloatPoint;
+                    add_precision_ = 16;
+                  }
+                  else if(tkn == DFSL::fp32_precision) {
+                    add_op_type_ = DSE::OpType::FloatPoint;
+                    add_precision_ = 32;
+                  }
+                  else if(tkn == DFSL::int4_precision) {
+                    add_op_type_ = DSE::OpType::FixedPoint;
+                    add_precision_ = 4;
+                  }
+                  else if(tkn == DFSL::int8_precision) {
+                    add_op_type_ = DSE::OpType::FixedPoint;
+                    add_precision_ = 8;
+                  }
+                  else if(tkn == DFSL::int16_precision) {
+                    add_op_type_ = DSE::OpType::FixedPoint;
+                    add_precision_ = 16;
+                  }
+                  else if(tkn == DFSL::int32_precision) {
+                    add_op_type_ = DSE::OpType::FixedPoint;
+                    add_precision_ = 32;
+                  }
+                  else {
+                    std::cout << "Unsupported precision!" << std::endl;
+                    ParseError(line_number);
+                  }
+
                   state_ = ParserState::PE_Body;
+                  break;
                 }
 
-							  break;
-							}
+                case ParserState::Buffer_Body: {
+                  if(tkn == DFSL::brace_close_) {
+                    state_ = ParserState::Acclerator_Body;
+                  }
+                  else {
+                    buffer_name_.push_back(tkn);
+                    state_ = ParserState::Buffer_Size;
+                  }
+                  break;
+                }
 
-							case ParserState::PE_MultPrecision: {
-							  if(tkn == DFSL::fp4_precision) {
-							    mult_op_type_ = DSE::OpType::FloatPoint;
-							    mult_precision_ = 4;
-							  }
-							  else if(tkn == DFSL::fp8_precision) {
-							    mult_op_type_ = DSE::OpType::FloatPoint;
-                  mult_precision_ = 8;
-							  }
-                else if(tkn == DFSL::fp16_precision) {
-                  mult_op_type_ = DSE::OpType::FloatPoint;
-                  mult_precision_ = 16;
+                case ParserState::Buffer_Size: {
+                  int buffer_size = std::atoi(tkn.c_str());
+
+                  if(buffer_size < 1) {
+                    std::cout << "Buffer size must be larger than 0" << std::endl;
+                    ParseError(line_number);
+                  }
+                  else {
+                    buffer_sizes_.push_back(buffer_size);
+                  }
+                  state_ = ParserState::Buffer_Body;
+                  break;
                 }
-                else if(tkn == DFSL::fp32_precision) {
-                  mult_op_type_ = DSE::OpType::FloatPoint;
-                  mult_precision_ = 32;
+
+                case ParserState::NoC_Identifier: {
+                  if(tkn == DFSL::brace_open_) {
+                    state_ = ParserState::NoC_Body;
+                  }
+                  else {
+                    //TODO: Add an error message
+                    ParseError(line_number);
+                  }
+                  break;
                 }
-                else if(tkn == DFSL::int4_precision) {
-                  mult_op_type_ = DSE::OpType::FixedPoint;
-                  mult_precision_ = 4;
+
+                case ParserState::NoC_Body: {
+                  if(tkn == DFSL::brace_close_) {
+                    state_ = ParserState::Acclerator_Body;
+                  }
+                  else {
+                    noc_name_.push_back(tkn);
+                    state_ = ParserState::Noc_Name_Identifier;
+                  }
+                  break;
                 }
-                else if(tkn == DFSL::int8_precision) {
-                  mult_op_type_ = DSE::OpType::FixedPoint;
-                  mult_precision_ = 8;
+
+                case ParserState::Noc_Name_Identifier: {
+                  if(tkn == DFSL::brace_open_) {
+                    state_ = ParserState::SubNoC_Body;
+                  }
+                  else {
+                    //TODO: Add an error message
+                    ParseError(line_number);
+                  }
+                  break;
                 }
-                else if(tkn == DFSL::int16_precision) {
-                  mult_op_type_ = DSE::OpType::FixedPoint;
-                  mult_precision_ = 16;
+
+                case ParserState::SubNoC_Body: {
+                  if(tkn == DFSL::brace_close_) {
+                    state_ = ParserState::NoC_Body;
+                  }
+                  else if(tkn == DFSL::noc_bandwidth_decl_) {
+                    state_ = ParserState::NoC_BW;
+                  }
+                  else if (tkn == DFSL::noc_avg_latency_decl_) {
+                    state_ = ParserState::NoC_Latency;
+                  }
+                  else {
+                    //TODO: Add an error message
+                    ParseError(line_number);
+                  }
+                  break;
                 }
-                else if(tkn == DFSL::int32_precision) {
-                  mult_op_type_ = DSE::OpType::FixedPoint;
-                  mult_precision_ = 32;
+
+                case ParserState::NoC_BW: {
+                  int noc_bw = std::atoi(tkn.c_str());
+                  if(noc_bw < 1) {
+                    ParseError(line_number);
+                  }
+                  else {
+                    noc_bandwidth_.push_back(noc_bw);
+                    state_ = ParserState::SubNoC_Body;
+                  }
+                  break;
                 }
-                else {
-                  std::cout << "Unsupported precision!" << std::endl;
+
+                case ParserState::NoC_Latency: {
+                  int noc_latency = std::atoi(tkn.c_str());
+                  if(noc_latency < 1) {
+                    ParseError(line_number);
+                  }
+                  else {
+                    noc_latency_.push_back(noc_latency);
+                    state_ = ParserState::SubNoC_Body;
+                  }
+                  break;
+                }
+
+                default: {
                   ParseError(line_number);
+                  break;
                 }
-
-                state_ = ParserState::PE_Body;
-							  break;
-							}
-
-              case ParserState::PE_AddPrecision: {
-                if(tkn == DFSL::fp4_precision) {
-                  add_op_type_ = DSE::OpType::FloatPoint;
-                  add_precision_ = 4;
-                }
-                else if(tkn == DFSL::fp8_precision) {
-                  add_op_type_ = DSE::OpType::FloatPoint;
-                  add_precision_ = 8;
-                }
-                else if(tkn == DFSL::fp16_precision) {
-                  add_op_type_ = DSE::OpType::FloatPoint;
-                  add_precision_ = 16;
-                }
-                else if(tkn == DFSL::fp32_precision) {
-                  add_op_type_ = DSE::OpType::FloatPoint;
-                  add_precision_ = 32;
-                }
-                else if(tkn == DFSL::int4_precision) {
-                  add_op_type_ = DSE::OpType::FixedPoint;
-                  add_precision_ = 4;
-                }
-                else if(tkn == DFSL::int8_precision) {
-                  add_op_type_ = DSE::OpType::FixedPoint;
-                  add_precision_ = 8;
-                }
-                else if(tkn == DFSL::int16_precision) {
-                  add_op_type_ = DSE::OpType::FixedPoint;
-                  add_precision_ = 16;
-                }
-                else if(tkn == DFSL::int32_precision) {
-                  add_op_type_ = DSE::OpType::FixedPoint;
-                  add_precision_ = 32;
-                }
-                else {
-                  std::cout << "Unsupported precision!" << std::endl;
-                  ParseError(line_number);
-                }
-
-                state_ = ParserState::PE_Body;
-                break;
-              }
-
-              case ParserState::Buffer_Body: {
-                if(tkn == DFSL::brace_close_) {
-                  state_ = ParserState::Acclerator_Body;
-                }
-                else {
-                  buffer_name_.push_back(tkn);
-                  state_ = ParserState::Buffer_Size;
-                }
-                break;
-              }
-
-              case ParserState::Buffer_Size: {
-                int buffer_size = std::atoi(tkn.c_str());
-
-                if(buffer_size < 1) {
-                  std::cout << "Buffer size must be larger than 0" << std::endl;
-                  ParseError(line_number);
-                }
-                else {
-                  buffer_sizes_.push_back(buffer_size);
-                }
-                state_ = ParserState::Buffer_Body;
-                break;
-              }
-
-              case ParserState::NoC_Identifier: {
-                if(tkn == DFSL::brace_open_) {
-                  state_ = ParserState::NoC_Body;
-                }
-                else {
-                  //TODO: Add an error message
-                  ParseError(line_number);
-                }
-                break;
-              }
-
-              case ParserState::NoC_Body: {
-                if(tkn == DFSL::brace_close_) {
-                  state_ = ParserState::Acclerator_Body;
-                }
-                else {
-                  noc_name_.push_back(tkn);
-                  state_ = ParserState::Noc_Name_Identifier;
-                }
-                break;
-              }
-
-              case ParserState::Noc_Name_Identifier: {
-                if(tkn == DFSL::brace_open_) {
-                  state_ = ParserState::SubNoC_Body;
-                }
-                else {
-                  //TODO: Add an error message
-                  ParseError(line_number);
-                }
-                break;
-              }
-
-              case ParserState::SubNoC_Body: {
-                if(tkn == DFSL::brace_close_) {
-                  state_ = ParserState::NoC_Body;
-                }
-                else if(tkn == DFSL::noc_bandwidth_decl_) {
-                  state_ = ParserState::NoC_BW;
-                }
-                else if (tkn == DFSL::noc_avg_latency_decl_) {
-                  state_ = ParserState::NoC_Latency;
-                }
-                else {
-                  //TODO: Add an error message
-                  ParseError(line_number);
-                }
-                break;
-              }
-
-              case ParserState::NoC_BW: {
-                int noc_bw = std::atoi(tkn.c_str());
-                if(noc_bw < 1) {
-                  ParseError(line_number);
-                }
-                else {
-                  noc_bandwidth_.push_back(noc_bw);
-                  state_ = ParserState::SubNoC_Body;
-                }
-                break;
-              }
-
-              case ParserState::NoC_Latency: {
-                int noc_latency = std::atoi(tkn.c_str());
-                if(noc_latency < 1) {
-                  ParseError(line_number);
-                }
-                else {
-                  noc_latency_.push_back(noc_latency);
-                  state_ = ParserState::SubNoC_Body;
-                }
-                break;
-              }
-
-							default: {
-								ParseError(line_number);
-								break;
-							}
 							} // End of switch(state_)
 						} // End of for(tkn)
 

@@ -43,7 +43,9 @@ namespace maestro {
 				InvalidDimension,
 				InvalidAnalysisCase,
 				EdgeOnSpatialMap,
-				MultiParallelismInSingleCluster
+				MultiParallelismInSingleCluster,
+				MissingNoCForCluster,
+				NotSupportedLayerType
 		};
 
 		class ErrorHandler {
@@ -108,6 +110,16 @@ namespace maestro {
 
             case ErrorCode::MultiParallelismInSingleCluster: {
               std::cout << "(Error@ " << instance_name << ") Found too many spatial maps within a single cluster. Cluster level: " << opt << "." <<  std::endl;
+              break;
+            }
+
+            case ErrorCode::MissingNoCForCluster: {
+              std::cout << "(Error@ " << instance_name << ") NoC is not defined at cluster level " << opt << "." << std::endl;
+              break;
+            }
+
+            case ErrorCode::NotSupportedLayerType: {
+              std::cout << "(Error@ " << instance_name << ") Not supported layer type. " << std::endl;
               break;
             }
 

@@ -38,7 +38,7 @@ namespace maestro {
       /* Default values : Models MAERI with VGG16 and 64 multiplier switches*/
       int np = 7;
       int bw = 32;
-      int hops = 2;
+      int hops = 1;
       int hop_latency = 1;
       bool mc = true;
       bool full_buffer = false;
@@ -49,7 +49,7 @@ namespace maestro {
       std::string layer_file_name = "data/layer/vgg16_conv1.m";
       std::string dfsl_file_name = "";
 
-      int num_alus_per_pe = 9;
+      int num_simd_lanes = 9;
       bool do_reduction = true;
       bool do_implicit_reduction = true;
       bool fg_sync = false;
@@ -98,7 +98,7 @@ namespace maestro {
           po::options_description pe_array("Processing element options");
           pe_array.add_options()
             ("num_pes", po::value<int>(&np), "the number of PEs")
-            ("num_pe_alus", po::value<int>(&num_alus_per_pe), "the number of ALUs in each PE")
+            ("num_simd_lanes", po::value<int>(&num_simd_lanes), "the number of ALUs in each PE")
             ("do_implicit_reduction", po::value<bool>(&do_implicit_reduction), "If PEs reduce items as soon as they generate partial results; if set as true, reductions do not require additional cycles.")
             ("do_fg_sync", po::value<bool>(&fg_sync), "Fine-grained synchronization is performed (future work)")
           ;

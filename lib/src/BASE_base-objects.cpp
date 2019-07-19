@@ -22,18 +22,22 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include <memory>
 
 #include "TL_error-handler.hpp"
+#include "TL_message-printer.hpp"
 
 namespace maestro {
 
+  //Singleton objects for common functionalities
 	std::shared_ptr<TL::ErrorHandler> error_handler;
+	std::shared_ptr<TL::MessagePrinter> message_printer;
 	int printout_level = 0;
 
-	void InitializeBaseObjects() {
+	void InitializeBaseObjects(int print_lv = 0) {
 		error_handler = std::make_shared<TL::ErrorHandler>();
+		message_printer = std::make_shared<TL::MessagePrinter>(print_lv);
 	}
 
-	void SetPrintOutLevel(int lv) {
-	  printout_level = lv;
+	void SetPrintOutLevel(int new_lv) {
+	  message_printer->SetPrintLv(new_lv);
 	}
 
 };

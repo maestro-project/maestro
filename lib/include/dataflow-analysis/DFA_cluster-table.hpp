@@ -28,6 +28,8 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 #include "BASE_maestro-class.hpp"
 #include "TL_error-handler.hpp"
+
+#include "DFA_layer.hpp"
 #include "DFA_analysis-output.hpp"
 #include "DFA_cluster-unit.hpp"
 
@@ -89,7 +91,8 @@ namespace maestro {
         }
         /***********************************************************************************************/
 
-        ClusterTable() :
+        ClusterTable(LayerType layer_type) :
+          layer_type_(layer_type),
           MAESTROClass("ClusterTable") {
           clusters_ = std::make_shared<std::vector<std::shared_ptr<DFA::ClusterUnit>>>();
         }
@@ -112,7 +115,12 @@ namespace maestro {
           }
         }
 
+        LayerType GetLayerType() {
+          return layer_type_;
+        }
+
       protected:
+        LayerType layer_type_;
         std::shared_ptr<std::vector<std::shared_ptr<DFA::ClusterUnit>>> clusters_;
 
     }; // End of class ClusterTable

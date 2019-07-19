@@ -31,7 +31,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 namespace maestro{
 
     enum class ConvLayerDimensionIdentifier {K, C, R, S ,Y, X};
-    enum class LayerType {CONV, FC, POOL, DSCONV, TRCONV, LSTM, INVALID};
+    enum class LayerType {CONV, DSCONV, FC, POOL, TRCONV, NGCONV, LSTM, NumLayerTypes};
 
     namespace DFA {
 
@@ -39,10 +39,11 @@ namespace maestro{
         protected:
           std::string name_;
           int size_;
-          int stride_;
+          int outer_stride_ = 1;
+          int inner_stride_ = 1;
         public:
-          LayerDimension(std::string name, int size, int stride=1) :
-            name_(name), size_(size), stride_(stride) {
+          LayerDimension(std::string name, int size, int outer_stride=1, int inner_stride=1) :
+            name_(name), size_(size), outer_stride_(outer_stride) {
           }
 
           std::string GetName(){
@@ -53,12 +54,16 @@ namespace maestro{
             return size_;
           }
 
-          int GetStride() {
-            return stride_;
+          int GetOuterStride() {
+            return outer_stride_;
+          }
+
+          int GetInnerStride() {
+            return inner_stride_;
           }
 
           std::string ToString() {
-          	std::string ret = name_ + ": size = " + std::to_string(size_) + ", stride = " + std::to_string(stride_);
+          	std::string ret = name_ + ": size = " + std::to_string(size_) + ", outer stride = " + std::to_string(outer_stride_);
           	return ret;
           }
       }; // End of class LayerDimension
@@ -66,10 +71,10 @@ namespace maestro{
       class Layer {
         public:
 
-          Layer(std::string name) : name_(name), misc_factor_(1), type_(LayerType::INVALID) {}
+          Layer(std::string name) : name_(name), type_(LayerType::NumLayerTypes) {}
 
-          Layer(std::string name, LayerType type, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions, int misc_factor) :
-            name_(name), type_(type), dimensions_(dimensions), misc_factor_(misc_factor) {
+          Layer(std::string name, LayerType type, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
+            name_(name), type_(type), dimensions_(dimensions) {
           }
 
           virtual ~Layer() {}
@@ -98,6 +103,14 @@ namespace maestro{
           	return dataflow_directives_;
           }
 
+          void SetLayerType(LayerType layer_type) {
+            type_ = layer_type;
+          }
+
+          LayerType GetLayerType() {
+            return type_;
+          }
+
 
           int GetSize(std::string id) {
             for (auto &it : *dimensions_) {
@@ -108,14 +121,24 @@ namespace maestro{
             return -1;
           }
 
-          int GetStride(std::string id) {
+          int GetOuterStride(std::string id) {
             for (auto &it : *dimensions_) {
               if(it->GetName() == id) {
-                return it->GetStride();
+                return it->GetOuterStride();
               }
             }
             return -1;
           }
+
+          int GetInnerStride(std::string id) {
+            for (auto &it : *dimensions_) {
+              if(it->GetName() == id) {
+                return it->GetInnerStride();
+              }
+            }
+            return -1;
+          }
+
 
           virtual std::string ToString() {
           	std::string ret = "BaseLayer";
@@ -127,7 +150,6 @@ namespace maestro{
           std::string name_;
           std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions_;
           std::shared_ptr<DFA::DirectiveTable> dataflow_directives_;
-          int misc_factor_;
 
       }; // End of class Layer
 
@@ -137,8 +159,8 @@ namespace maestro{
       		ConvLayer (std::string name) : Layer(name) {
       		}
 
-          ConvLayer (std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions, int expansion_factor) :
-           Layer(name, LayerType::CONV, dimensions, expansion_factor) {
+          ConvLayer (std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
+           Layer(name, LayerType::CONV, dimensions) {
           }
 
           virtual ~ConvLayer() {}
@@ -209,24 +231,6 @@ namespace maestro{
             return -1;
           }
 
-          int GetStrideWidth() {
-            for (auto &it : *dimensions_) {
-              if(it->GetName() == DFSL::layer_dim_input_width_) {
-                return it->GetStride();
-              }
-            }
-            return -1;
-          }
-
-          int GetStrideHeight() {
-            for (auto &it : *dimensions_) {
-              if(it->GetName() == DFSL::layer_dim_input_height_) {
-                return it->GetStride();
-              }
-            }
-            return -1;
-          }
-
           virtual std::string ToString() {
           	std::string ret = "Layer " + name_ + "{\nType: CONV\n Dimension {\n";
             for (auto &it : *dimensions_) {
@@ -247,12 +251,103 @@ namespace maestro{
 
       }; // End of class ConvLayer
 
+
+      class DSConvLayer : public ConvLayer {
+        public:
+
+          DSConvLayer (std::string name) : ConvLayer(name) {
+          }
+
+          DSConvLayer (std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
+           ConvLayer(name, dimensions) {
+          }
+
+          virtual ~DSConvLayer() {}
+
+          virtual bool IsValid() {
+            return ConvLayer::IsValid();
+          }
+
+          virtual std::string ToString() {
+            std::string ret = "Layer " + name_ + "{\nType: DSCONV\n Dimension {\n";
+            for (auto &it : *dimensions_) {
+              ret += it->ToString();
+              ret += "\n";
+            }
+            ret += "}\n";
+
+            ret += "Dataflow {\n";
+            for (auto &it : *dataflow_directives_) {
+              ret += it->ToString();
+              ret += "\n";
+            }
+            ret += "}\n";
+
+            return ret;
+          }
+
+      }; // End of class DSConvLayer
+
+
+      class NGConvLayer : public ConvLayer {
+        public:
+
+          NGConvLayer (std::string name) : ConvLayer(name) {
+          }
+
+          NGConvLayer (std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
+           ConvLayer(name, dimensions) {
+          }
+
+          virtual ~NGConvLayer() {}
+
+          std::string GetName() {
+            return name_;
+          }
+
+          std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() {
+            return dimensions_;
+          }
+
+          virtual bool IsValid() {
+            return ConvLayer::IsValid();
+          }
+
+          int GetSize(std::string id) {
+            for (auto &it : *dimensions_) {
+              if(it->GetName() == id) {
+                return it->GetSize();
+              }
+            }
+            return -1;
+          }
+
+          virtual std::string ToString() {
+            std::string ret = "Layer " + name_ + "{\nType: CONV\n Dimension {\n";
+            for (auto &it : *dimensions_) {
+              ret += it->ToString();
+              ret += "\n";
+            }
+            ret += "}\n";
+
+            ret += "Dataflow {\n";
+            for (auto &it : *dataflow_directives_) {
+              ret += it->ToString();
+              ret += "\n";
+            }
+            ret += "}\n";
+
+            return ret;
+          }
+
+      }; // End of class NGConvLayer
+
       class FCLayer : public Layer {
         protected:
 
         public:
           FCLayer (std::string name, LayerType type, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
-            Layer(name, type, dimensions, -1) {
+            Layer(name, type, dimensions) {
           }
 
           virtual std::string ToString() {
@@ -273,7 +368,7 @@ namespace maestro{
 
         public:
           LSTMLayer (std::string name, LayerType type, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
-            Layer(name, type, dimensions, -1) {
+            Layer(name, type, dimensions) {
           }
 
           virtual std::string ToString() {

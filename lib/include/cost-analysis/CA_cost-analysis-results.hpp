@@ -25,6 +25,9 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include "BASE_maestro-class.hpp"
 #include "BASE_constants.hpp"
 
+#include "DFA_layer.hpp"
+#include "CA_analysis-types.hpp"
+
 namespace maestro {
   namespace CA {
 
@@ -34,27 +37,32 @@ namespace maestro {
     class CostAnalyisResults : public MAESTROClass {
       public:
         CostAnalyisResults() :
+          layer_type_(LayerType::NumLayerTypes),
           cluster_level_(-1),
           num_computations_(0),
-          runtime_(0),
           MAESTROClass ("CostAnalysisResults on a cluster in an undefined level") {
         }
 
 
-        CostAnalyisResults(int cluster_level) :
+        CostAnalyisResults(LayerType layer_type, int cluster_level) :
+          layer_type_(layer_type),
           cluster_level_(cluster_level),
           num_computations_(0),
-          runtime_(0),
           MAESTROClass ("CostAnalysisResults at cluster level" + std::to_string(cluster_level)) {
         }
 
-        long GetRuntime() {
-          return runtime_;
+        long GetRuntime(CA::EstimationType estimation_type = CA::EstimationType::Exact) {
+          return runtime_[static_cast<int>(estimation_type)];
         }
 
         long GetNumComputations() {
           return num_computations_;
         }
+
+        long GetTopNumComputations() {
+          return top_level_num_computations_;
+        }
+
 
         long GetBufferAccessCount(BufferType target_buffer, BufferAccessType access_type, DataClass data_class) {
           long ret;
@@ -134,12 +142,16 @@ namespace maestro {
           return num_sub_clusters_;
         }
 
-        void UpdateRuntime(long new_runtime) {
-          runtime_ = new_runtime;
+        void UpdateRuntime(long new_runtime, CA::EstimationType estimation_type = CA::EstimationType::Exact) {
+          runtime_[static_cast<int>(estimation_type)] = new_runtime;
         }
 
         void UpdateNumComputations(long num_computations) {
           num_computations_ = num_computations;
+        }
+
+        void UpdateTopNumComputations(long num_computations) {
+          top_level_num_computations_ = num_computations;
         }
 
         void UpdatePeakBWReq(long bw_req) {
@@ -165,10 +177,18 @@ namespace maestro {
           }
         }
 
+        LayerType GetLayerType() {
+          return layer_type_;
+        }
+
       protected:
+        LayerType layer_type_;
+
         long cluster_level_ = 0;
         long num_sub_clusters_ = 0;
-        long runtime_=0;
+
+//        CA::EstimationType estimation_type;  = CA::EstimationType::Exact
+        long runtime_[static_cast<int>(CA::EstimationType::NumEstimationTypes)]= {0, };
 
         long upstream_buffer_write_estimate_[static_cast<int>(DataClass::NumDataClasses)] = {0}; // This is just an estimate in multi-cluster cases
         long upstream_buffer_read_[static_cast<int>(DataClass::NumDataClasses)] = {0};
@@ -187,6 +207,7 @@ namespace maestro {
         double avg_bw_req_ = 0;
 
         long num_computations_ = 0;
+        long top_level_num_computations_ = 0;
       private:
 
     }; // End of class CostAnalysisResults

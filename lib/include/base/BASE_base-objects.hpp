@@ -25,13 +25,17 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 #include <memory>
 #include "TL_error-handler.hpp"
+#include "TL_message-printer.hpp"
 
 namespace maestro {
 
 	extern std::shared_ptr<TL::ErrorHandler> error_handler;
+	extern std::shared_ptr<TL::MessagePrinter> message_printer;
+
 	extern int printout_level;
 
-	void InitializeBaseObjects();
+	void InitializeBaseObjects(int print_lv = 256);
+  void SetPrintOutLevel(int new_lv);
 
 };
 

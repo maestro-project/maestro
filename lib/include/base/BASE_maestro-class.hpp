@@ -34,12 +34,14 @@ namespace maestro {
 
 			MAESTROClass() :
 				instance_name_("class"),
-				error_handler_(error_handler) {
+				error_handler_(error_handler),
+				message_printer_(message_printer) {
 			}
 
 			MAESTROClass(std::string instance_name) :
 				instance_name_(instance_name),
-				error_handler_(error_handler) {
+				error_handler_(error_handler),
+				message_printer_(message_printer) {
 			}
 
 			std::string GetName() {
@@ -53,6 +55,7 @@ namespace maestro {
 		protected:
 			std::string instance_name_;
 			std::shared_ptr<TL::ErrorHandler> error_handler_;
+			std::shared_ptr<TL::MessagePrinter> message_printer_;
 	};
 };
 #endif

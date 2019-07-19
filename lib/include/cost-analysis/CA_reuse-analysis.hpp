@@ -104,26 +104,41 @@ namespace  maestro {
           bool is_sp_mapped = false;
 
           for(auto& dim : *coupled_dims) {
+//            std::cout << "Tensor " << tensor->GetTensorName() << " is coupled with " << dim << std::endl;
             auto dataflow = target_cluster_->GetDataflow();
             auto directive = dataflow->FindDirective(dim);
             if(directive != nullptr) {
               if(directive->GetClass() == DFA::directive::DirectiveClass::SpatialMap) {
                 is_sp_mapped = true;
+
+//                std::cout << "Dimension " << dim << " is spatially mapped" << std::endl;
+
                 break;
               }
             }
           }
 
+//          std::cout << "Single PE Load volume: " << GetPELoadVolume(tensor, iter_status, true) << std::endl;
+
           ret += GetPELoadVolume(tensor, iter_status, true);
           switch(estimation_type) {
             case CA::EstimationType::Exact: {
               if(num_sub_clusters > 1 && is_sp_mapped) { // && if tensor is spatially mapped
+//                std::cout << "Multipying spatial clusters, " << num_sub_clusters << std::endl;
                 ret += (num_sub_clusters-1) * GetPELoadVolume(tensor, iter_status, false);
               }
               break;
             }
             case CA::EstimationType::Max: {
-              ret += (num_clusters-1) * GetPELoadVolume(tensor, iter_status, false);
+              if(is_sp_mapped) {
+                ret += (num_clusters-1) * GetPELoadVolume(tensor, iter_status, false);
+              }
+              break;
+            }
+            case CA::EstimationType::Min: {
+              if(is_sp_mapped && !is_sp_edge) {
+                ret += (num_sub_clusters-1) * GetPELoadVolume(tensor, iter_status, false);
+              }
               break;
             }
             default: {
@@ -138,7 +153,8 @@ namespace  maestro {
             std::shared_ptr<DFA::Tensor> output_tensor,
             std::shared_ptr<std::vector<CA::IterationStatus>> iter_status,
             bool get_num_partial_sum = false,
-            bool is_sp_edge_pe = false)
+            bool is_sp_edge_pe = false,
+            CA::EstimationType estimation_type = CA::EstimationType::Exact)
         {
           long num_outputs = 1;
 
@@ -155,7 +171,6 @@ namespace  maestro {
             }
           }
           /******/
-
 
           int directive_id = 0;
           for(auto directive : *dataflow) {
@@ -222,8 +237,25 @@ namespace  maestro {
 
               if((directive->GetClass() == DFA::directive::DirectiveClass::TemporalMap)) {
                 if(iter_status_this_var == IterationStatus::Edge) {
-//                  actual_map_size = dimensions->GetSize(directive_var) % directive->GetOfs(); // TODO: Verify this change
-                  actual_map_size = dimensions->GetSize(directive_var) - (dimensions->GetSize(directive_var)/directive->GetOfs()) * directive->GetOfs();
+
+                  switch(estimation_type) {
+                    case CA::EstimationType::Exact: {
+                      //actual_map_size = dimensions->GetSize(directive_var) % directive->GetOfs(); // TODO: Verify this change
+                      actual_map_size = dimensions->GetSize(directive_var) - (dimensions->GetSize(directive_var)/directive->GetOfs()) * directive->GetOfs();
+                      break;
+                    }
+                    case CA::EstimationType::Min: {
+                      actual_map_size = 0;
+                      break;
+                    }
+                    case CA::EstimationType::Max: {
+                      actual_map_size = dimensions->GetSize(directive_var);
+                      break;
+                    }
+                    default: {
+                      break;
+                    }
+                  }
                 }
                 else if(iter_status_this_var == IterationStatus::Init && target_cluster_->IsInitEdge(directive_var)) {
                   actual_map_size = dimensions->GetSize(directive_var);
@@ -235,15 +267,29 @@ namespace  maestro {
               else { // if it is spatially mapped
                 if((iter_status_this_var == IterationStatus::Edge)
                     || (iter_status_this_var == IterationStatus::Init && target_cluster_->IsInitEdge(directive_var)) ) {
-                  if(dimensions->GetSize(directive_var) < original_map_size) {
-                    actual_map_size = dimensions->GetSize(directive_var);
-                  }
-                  else if(is_sp_edge_pe) {
-                    actual_map_size = dimensions->GetSize(directive_var) % directive->GetOfs();
-                    actual_map_size = (actual_map_size == 0)? original_map_size : actual_map_size;
-                  }
-                  else {
-                    actual_map_size = original_map_size;
+
+                  switch(estimation_type) {
+                    case CA::EstimationType::Exact: {
+                      if(dimensions->GetSize(directive_var) < original_map_size) {
+                        actual_map_size = dimensions->GetSize(directive_var);
+                      }
+                      else if(is_sp_edge_pe) {
+                        actual_map_size = dimensions->GetSize(directive_var) % directive->GetOfs();
+                        actual_map_size = (actual_map_size == 0)? original_map_size : actual_map_size;
+                      }
+                      else {
+                        actual_map_size = original_map_size;
+                      }
+                      break;
+                    }
+                    case CA::EstimationType::Min: {
+                      actual_map_size = 1;
+                      break;
+                    }
+                    case CA::EstimationType::Max: {
+                      actual_map_size = original_map_size;
+                      break;
+                    }
                   }
                 }
               }
@@ -265,6 +311,14 @@ namespace  maestro {
                     int sliding_dim_size = dataflow->FindDirective(overlapping_dim)->GetSize();
                     int reference_dim_size = original_map_size;
                     int actual_reference_dim_size = reference_dim_size;
+
+                    /***/
+                    //TRCONV support (beta)
+                    // TODO: Verify it
+                    if(dimensions->GetInnerStride(directive_var) != 1) {
+                      actual_reference_dim_size += dimensions->GetInnerStride(directive_var) * sliding_dim_size  + 1;
+                    }
+                    /***/
                     //TODO: I don't think we need to deal with edge case on sliding dim size. Verify this
                     actual_map_size = (reference_dim_size < sliding_dim_size)? actual_map_size : reference_dim_size - sliding_dim_size + 1;
                   }
@@ -294,10 +348,15 @@ namespace  maestro {
                 }
               }
 
+              //If the variable is coupled with the output tensor
+              if(std::find(coupled_var_list->begin(), coupled_var_list->end(), directive_var) != coupled_var_list->end()) {
+                num_outputs *= actual_map_size;
+              }
+              else if(get_num_partial_sum) {
+                num_outputs *= actual_map_size;
+              }
 
-              num_outputs *= actual_map_size;
 //            } // End of if(directive var is coupled with the target tensor)
-
           } // End of for each directive in dataflow
 
           return num_outputs;
@@ -316,12 +375,16 @@ namespace  maestro {
         std::unique_ptr<std::map<std::string, int>> num_reused_elements_tp_edge_;
 
       private:
+
+      public:
         /* This is a critical function that actually estimates reuse based on various cases */
         /* And also, this is actually the most complicated function! (Although it seems pretty short)*/
         long GetPELoadVolume(std::shared_ptr<DFA::Tensor> tensor,
                              std::shared_ptr<std::vector<IterationStatus>> iter_status,
-                             bool is_first_pe,
-                             CA::EstimationType estimation_type = CA::EstimationType::Exact) {
+                             bool is_first_pe) {
+//          std::cout << "[ReuseAnalysis-GetPELoadVolume] Tensor is " << tensor->GetTensorName() << std::endl;
+
+
           auto dataflow = target_cluster_->GetDataflow();
           auto dimensions = target_cluster_->GetDimensions();
           auto coupled_dims = tensor->GetCoupledVariables();
@@ -330,6 +393,9 @@ namespace  maestro {
           // Prime change id: The inner-most Steady or Edge dimension;
           //   when a variable is incremented, all the sub dimensions are init
           int prime_changing_dim_id = GetPrimeChangingDimDirectiveID(iter_status);
+
+//          std::cout << "[ReuseAnalysis-GetPELoadVolume] Prime changing dim id is " << prime_changing_dim_id << std::endl;
+
           int tensor_prime_changing_dim_id = GetPrimeChangingDimDirectiveIDTensor(tensor, iter_status, prime_changing_dim_id);
 
           bool is_all_init_case = (prime_changing_dim_id == -1); // Maybe redundant now. Let's check it later
@@ -370,8 +436,16 @@ namespace  maestro {
             int directive_idx = dataflow->GetDirectiveIdx(dim);
 
             bool is_changing_dim = (directive_idx == prime_changing_dim_id);
+/*
+            if(is_changing_dim)
+              std::cout << "[ReuseAnalysis-GetPELoadVolume] Dimension " << dim << " is changing" << std::endl;
+            else
+              std::cout << "[ReuseAnalysis-GetPELoadVolume] Dimension " << dim << " is not changing" << std::endl;
+*/
 
             if(directive_class == DFA::directive::DirectiveClass::SpatialMap) {
+              //std::cout << "[ReuseAnalysis-GetPELoadVolume] Dimension " << dim << " is spatially mapped" << std::endl;
+
               //Spatial reuse check is always there
               if(is_first_pe) {
                 load_voulme_with_tp_reuse *= (*num_mapped_elements_)[dim];
@@ -381,18 +455,29 @@ namespace  maestro {
               }
             }
             else {
+//              std::cout << "[ReuseAnalysis-GetPELoadVolume] Dimension " << dim << " is temporally mapped" << std::endl;
               if(is_changing_dim) {
+                //std::cout << "[ReuseAnalysis-GetPELoadVolume] Dimension " << dim << ", multiply unique element counts: " << (*num_unique_elements_)[dim] << std::endl;
                 load_voulme_with_tp_reuse *= (*num_unique_elements_)[dim];
               }
               else {
-                load_voulme_with_tp_reuse *= (*num_mapped_elements_)[dim];
+
+                if(iter_status->at(directive_idx) == IterationStatus::Unroll) {
+                  load_voulme_with_tp_reuse *= dimensions->GetSize(dim);
+                }
+                else {
+                  load_voulme_with_tp_reuse *= (*num_mapped_elements_)[dim];
+                }
               }
             }
+
+            //std::cout << "[ReuseAnalysis-GetPELoadVolume] load_voulme_with_tp_reuse = " << load_voulme_with_tp_reuse << std::endl;
           }
 
           return load_voulme_with_tp_reuse;
-
         }
+
+      private:
 
         int GetPrimeChangingDimDirectiveID(std::shared_ptr<std::vector<IterationStatus>> iter_status) {
           int changing_dim_directive_id = -1;

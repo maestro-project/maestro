@@ -23,7 +23,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #ifndef MAESTRO_DFA_CONV_CLUSTER_ANALYSIS_HPP_
 #define MAESTRO_DFA_CONV_CLUSTER_ANALYSIS_HPP_
 
-//#define DEBUG_CLUSTER_ANALYSIS
+#define DEBUG_CLUSTER_ANALYSIS
 
 #include <vector>
 #include <memory>
@@ -52,21 +52,22 @@ namespace maestro {
      * Receive full dataflow description and split it into clusters
      */
 
-
     class ClusterAnalysis : public MAESTROClass {
       public:
-        ClusterAnalysis(int num_pes,
+        ClusterAnalysis(LayerType layer_type,
+                        int num_pes,
                         std::shared_ptr<DFA::TensorTable> tensors,
                         std::shared_ptr<DFA::DimensionTable> full_dimensions,
                         std::shared_ptr<DFA::DirectiveTable> full_dataflow,
                         std::shared_ptr<std::vector<std::shared_ptr<abstract_hw::NetworkOnChipModel>>> nocs) :
           MAESTROClass("ClusterAnalysis"),
+          layer_type_(layer_type),
           num_unit_clusters_(num_pes),
           tensors_(tensors),
           full_dimensions_(full_dimensions),
           full_dataflow_(full_dataflow),
           nocs_(nocs) {
-          clusters_ = std::make_shared<DFA::ClusterTable>();
+          clusters_ = std::make_shared<DFA::ClusterTable>(layer_type);
           AnalyzeClusters();
         }
 
@@ -74,8 +75,25 @@ namespace maestro {
           return clusters_;
         }
 
+        int GetNumActivePEs() {
+          return num_active_unit_clusters_;
+        }
+
+        int GetUppermostClusterSize() {
+          return uppermost_cluster_unit_size;
+        }
+
+        int GetInnermostClusterSize() {
+          return innermost_cluster_unit_size;
+        }
+
       protected:
+        LayerType layer_type_;
         int num_unit_clusters_;
+        int num_active_unit_clusters_ = 1;
+        int num_cluster_lvs = 0;
+        int uppermost_cluster_unit_size = 1;
+        int innermost_cluster_unit_size = 1;
 
         // Dimension and dataflow information of entire accelerator(s)
         std::shared_ptr<DFA::TensorTable> tensors_;
@@ -87,43 +105,13 @@ namespace maestro {
         std::shared_ptr<DFA::ClusterTable> clusters_;
 
       private:
-        void AnalyzeClusters() { //TODO: Fix this
-          std::vector<int> cluster_sizes;
 
-          int num_cluster_lvs = 0;
-          int uppermost_cluster_unit_size = 1;
-          //Count the number of clusters
-          for(auto directive: *full_dataflow_) {
-            if(directive->GetClass() == DFA::directive::DirectiveClass::Cluster) {
-              cluster_sizes.push_back(directive->GetSize());
-              num_cluster_lvs++;
-              uppermost_cluster_unit_size *= directive->GetSize();
-            }
-          }
-
-          if(uppermost_cluster_unit_size == 1) uppermost_cluster_unit_size = num_unit_clusters_;
-
-          int IY_size, IX_size, R_size, S_size;
-
-          for(auto dim : *full_dimensions_) {
-
-            if(dim->GetName() == "Y") {
-              IY_size = dim->GetSize();
-            }
-            else if(dim->GetName() == "X") {
-              IX_size = dim->GetSize();
-            }
-            else if(dim->GetName() == "R") {
-              R_size = dim->GetSize();
-            }
-            else if(dim->GetName() == "S") {
-              S_size = dim->GetSize();
-            }
-          }
-
+        void AnalyzeClusters() {
+          AnalyzeClusterStructure();
 
           int current_cluster_level = num_cluster_lvs;
           int num_unit_clusters = uppermost_cluster_unit_size * (num_unit_clusters_/uppermost_cluster_unit_size); //Normalizing the number
+          num_active_unit_clusters_ = num_unit_clusters;
           int current_cluster_size = num_unit_clusters;
           int last_cluster_size = num_unit_clusters;
 
@@ -132,8 +120,8 @@ namespace maestro {
           auto cluster_dimensions =full_dimensions_;
           std::shared_ptr<DFA::DimensionTable> prev_cluster_dimensions = nullptr;
 
+          //Main loop
           for(auto directive: *full_dataflow_) {
-
             switch(directive->GetClass()) {
               case directive::DirectiveClass::SpatialMap: {
                 cluster_dataflow->AddDirective(directive);
@@ -146,57 +134,26 @@ namespace maestro {
               } // End of case TemporalMap
 
               case directive::DirectiveClass::Cluster: {
-                std::shared_ptr<abstract_hw::NetworkOnChipModel> noc;
-
+                // Get NoC setting for this cluster
                 if(nocs_->size() < current_cluster_level) {
-                  noc = nocs_->at(0);
+                  error_handler->PrintErrorMsg(TL::ErrorCode::MissingNoCForCluster, std::to_string(current_cluster_level) ,this->GetName());
+                  error_handler->TerminateProgram();
                 }
-                else {
-                  noc = nocs_->at(current_cluster_level);
-                }
+                std::shared_ptr<abstract_hw::NetworkOnChipModel> noc = nocs_->at(current_cluster_level);
 
-                std::list<std::string> var_list_input_tensor;
-                for(auto& tensor : *tensors_) {
-                  if(tensor->GetTensorClass() == TensorClass::InputTensor) {
-                    auto correlated_vars = tensor->GetCoupledVariables();
+                auto var_list_input_tensor = GetInputTensorVars();
 
-                    for(auto var : *correlated_vars) {
-                      var_list_input_tensor.push_back(var);
-                    }
-                  }
-                }
-                var_list_input_tensor.sort();
-                var_list_input_tensor.unique();
-
-                //
                 ConvertToInputCentric(cluster_dataflow);
 
-                /* Complement dataflow */
-                // Inherit directives
-                if(prev_dataflow != nullptr) {
-                  for(auto& upper_directive : *prev_dataflow) {
-                    auto upper_directive_var = upper_directive->GetVariable();
-                    if(cluster_dataflow->FindDirective(upper_directive_var) == nullptr) {
-                      int upper_map_sz = upper_directive->GetSize();
-                      int upper_ofs_sz = upper_directive->GetOfs();
-
-                      auto inherited_dataflow = std::make_shared<DFA::directive::TemporalMap>(upper_map_sz, upper_ofs_sz, upper_directive_var);
-                      cluster_dataflow->AddDirectiveFront(inherited_dataflow);
-                    }
-                  }
-                }
-
+                /* Complement dataflow; automotically guess missing directives */
+                // Inherit missing directives
+                InheritMissingDirectives(prev_dataflow, cluster_dataflow);
                 // Insert "Unroll" of missing dimensions
-                for(auto& var : var_list_input_tensor) {
-                  if(cluster_dataflow->FindDirective(var) == nullptr) {
+                UnrollMissingDirectives(var_list_input_tensor, cluster_dimensions, cluster_dataflow);
 
-                    if(cluster_dimensions->HasVar(var)) {
-                      int dim_sz = cluster_dimensions->GetSize(var);
-                      auto dummy_directive = std::make_shared<DFA::directive::TemporalMap>(dim_sz, dim_sz, var);
-                      cluster_dataflow->AddDirective(dummy_directive);
-                    }
-                  }
-                }
+                bool is_top_cluster = (current_cluster_level == num_cluster_lvs);
+
+                ApplyOuterStride(is_top_cluster, cluster_dataflow, cluster_dimensions);
 
 #ifdef DEBUG_CLUSTER_ANALYSIS
                 std::cout << "Cluster level: " << current_cluster_level << std::endl;
@@ -205,28 +162,17 @@ namespace maestro {
                 std::cout << cluster_dimensions->ToString() << std::endl;
                 std::cout << cluster_dataflow->ToString() << std::endl;
                 std::cout << "uppermost_cluster_unit_size: " << uppermost_cluster_unit_size << std::endl;
+                std::cout << "NoC Bandwidth: " << noc->GetBandwidth() << std::endl;
 #endif
 
-#ifdef DEBUG_CLUSTER_ANALYSIS
-                if(noc == nullptr) {
-                  std::cout <<"NoC is null" <<std::endl;
-                }
-                else {
-                  std::cout << "NoC Bandwidth: " << noc->GetBandwidth() << std::endl;
-                }
-
-#endif
-
-                ConvertToInputCentric(cluster_dataflow);
-
-                if(current_cluster_level == num_cluster_lvs) {
+                //Note that the cluster level is 0 in the inner-most cluster
+                // We are filling the cluster from backward (from outer-most to inner-most)
+                if(is_top_cluster) {
                   current_cluster_size = num_unit_clusters / uppermost_cluster_unit_size;
                 }
                 else {
                   current_cluster_size = last_cluster_size;
                 }
-
-
 
                 auto new_cluster = std::make_shared<DFA::ClusterUnit>(current_cluster_level,
                                                                       current_cluster_size,
@@ -234,7 +180,6 @@ namespace maestro {
                                                                       cluster_dimensions,
                                                                       tensors_,
                                                                       noc);
-
                 last_cluster_size = directive->GetSize();
 
 #ifdef DEBUG_CLUSTER_ANALYSIS
@@ -248,60 +193,8 @@ namespace maestro {
                 cluster_dimensions = std::make_shared<DFA::DimensionTable>();
                 cluster_dimensions->SetOverlapTable(prev_cluster_dimensions->GetOverlapTable());
 
-                // Update Dimension table; new dimension = mapping size at upper cluster
-                for(auto var : var_list_input_tensor) {
-                  auto directive = cluster_dataflow->FindDirective(var);
-
-                  //Deal with edge cases
-                  int final_dim_sz = std::min(directive->GetSize(), prev_cluster_dimensions->GetSize(var));
-                  auto dim = std::make_shared<DFA::LayerDimension>(var, final_dim_sz);
-                  cluster_dimensions->AddDimension(dim);
-                }
-
-                //Restore output-centric info
-                /*******************************************/
-                //TODO: Update this from CONV-specific to general one
-                int size_X, size_Y, size_R, size_S;
-                for(auto& dim : *cluster_dimensions) {
-                  auto var = dim->GetName();
-                  if(var == DFSL::layer_dim_input_width_) {
-                    size_X = dim->GetSize();
-                  }
-                  else if(var == DFSL::layer_dim_input_height_) {
-                    size_Y = dim->GetSize();
-                  }
-                  else if(var == DFSL::layer_dim_weight_width_) {
-                    size_S = dim->GetSize();
-                  }
-                  else if(var == DFSL::layer_dim_weight_height_) {
-                    size_R = dim->GetSize();
-                  }
-                }
-
-                int size_OX = size_X - size_S + 1;
-                size_OX = (size_OX > 0)? size_OX : 1;
-
-                int size_OY = size_Y - size_R + 1;
-                size_OY = (size_OY > 0)? size_OY : 1;
-
-
-                auto ox_dim = std::make_shared<DFA::LayerDimension>(DFSL::layer_dim_output_width_, size_OX);
-                auto oy_dim = std::make_shared<DFA::LayerDimension>(DFSL::layer_dim_output_height_, size_OY);
-
-                cluster_dimensions->AddDimension(ox_dim);
-                cluster_dimensions->AddDimension(oy_dim);
-                /*******************************************/
-
+                ConstructLowerClusterDimensionTable(var_list_input_tensor, prev_cluster_dimensions, cluster_dimensions, cluster_dataflow);
                 prev_dataflow = cluster_dataflow;
-/*
-                //If directive is omitted, inherit dimension from upper cluster
-                if(!var_list.empty()) {
-                  for(auto var : var_list) {
-                    auto dim = std::make_shared<DFA::LayerDimension>(var, prev_cluster_dimensions->GetSize(var));
-                    cluster_dimensions->AddDimension(dim);
-                  }
-                }
-*/
                 cluster_dataflow = std::make_shared<DFA::DirectiveTable>();
 
                 current_cluster_level--;
@@ -312,73 +205,147 @@ namespace maestro {
               }
             }// End of switch(directive->GetClass)
           } // End of for-each directive in full_dataflow
+        } // End of function void AnalyzeClusters
 
 
-          std::list<std::string> var_list;
-          for(auto& tensor : *tensors_) {
-            if(tensor->GetTensorClass() == TensorClass::InputTensor) {
-              auto correlated_vars = tensor->GetCoupledVariables();
+        void AnalyzeClusterStructure() {
+          std::vector<int> cluster_sizes;
+          int last_cluster_size = num_unit_clusters_;
 
-              for(auto var : *correlated_vars) {
-                var_list.push_back(var);
-              }
+          //Count the number of clusters
+          for(auto directive: *full_dataflow_) {
+            if(directive->GetClass() == DFA::directive::DirectiveClass::Cluster) {
+              cluster_sizes.push_back(directive->GetSize());
+              num_cluster_lvs++;
+              uppermost_cluster_unit_size *= directive->GetSize();
+              last_cluster_size = directive->GetSize();
             }
           }
-          var_list.sort();
-          var_list.unique();
+
+          // Add the inner-most cluster directive
+          std::shared_ptr<DFA::directive::Cluster> last_cluster
+          = std::make_shared<DFA::directive::Cluster>(last_cluster_size, DFA::directive::ClusterType::Physical);
+          full_dataflow_->AddDirective(last_cluster);
+
+          innermost_cluster_unit_size = last_cluster_size;
+
+        }
+
+        void ApplyOuterStride(
+            bool is_top_cluster,
+            std::shared_ptr<DFA::DirectiveTable> cluster_dataflow,
+            std::shared_ptr<DFA::DimensionTable> cluster_dimensions) {
+
+          for(auto& directive: *cluster_dataflow) {
+            auto directive_var = directive->GetVariable();
+            int outer_stride = cluster_dimensions->GetOuterStride(directive_var);
+
+            if(cluster_dimensions->IsOverlapped(directive_var) && !cluster_dimensions->IsSlidingDim(directive_var) && outer_stride != 1) {
+              int map_size = directive->GetSize();
+              int ofs_size = directive->GetOfs();
+              int directive_idx = cluster_dataflow->GetDirectiveIdx(directive_var);
+
+              auto sliding_dim = cluster_dimensions->GetOverlappingDim(directive_var);
+
+              int sliding_dim_size = full_dimensions_->GetSize(sliding_dim);
+              int reference_dim_size = cluster_dimensions->GetSize(directive_var);
+
+              if(map_size >= full_dimensions_->GetSize(sliding_dim)) {
+                int output_map_size = (map_size + outer_stride -  sliding_dim_size) / outer_stride; // Implicit flooring
+                int adjusted_map_size = output_map_size * std::min(outer_stride, sliding_dim_size) + std::max(sliding_dim_size - outer_stride, 0);
+                int adjusted_ofs_size = output_map_size * outer_stride; //std::min(outer_stride, sliding_dim_size);
+
+                if(!is_top_cluster && sliding_dim_size < outer_stride) {
+                  adjusted_ofs_size = output_map_size * sliding_dim_size;
+                }
+
+                cluster_dataflow->at(directive_idx)->SetSize(adjusted_map_size);
+                cluster_dataflow->at(directive_idx)->SetOfs(adjusted_ofs_size);
+
+                int adjusted_dim_size;
+              }
+            }
+
+          }
 
 
-          ConvertToInputCentric(cluster_dataflow);
+        }
 
-          // Inherit directives
+        void InheritMissingDirectives(
+            std::shared_ptr<DFA::DirectiveTable> prev_dataflow,
+            std::shared_ptr<DFA::DirectiveTable> cluster_dataflow) {
+
           if(prev_dataflow != nullptr) {
             for(auto& upper_directive : *prev_dataflow) {
               auto upper_directive_var = upper_directive->GetVariable();
-              if(prev_dataflow->FindDirective(upper_directive_var) == nullptr) {
+              if(cluster_dataflow->FindDirective(upper_directive_var) == nullptr) {
                 int upper_map_sz = upper_directive->GetSize();
-                auto inherited_dataflow = std::make_shared<DFA::directive::TemporalMap>(upper_map_sz, upper_map_sz, upper_directive_var);
+                int upper_ofs_sz = upper_directive->GetOfs();
+
+                auto inherited_dataflow = std::make_shared<DFA::directive::TemporalMap>(upper_map_sz, upper_ofs_sz, upper_directive_var);
                 cluster_dataflow->AddDirectiveFront(inherited_dataflow);
               }
             }
           }
+        }
 
-          // Insert "Unroll" to still missing dimensions
-          for(auto& var : var_list) {
+        void UnrollMissingDirectives(
+            std::list<std::string> var_list_input_tensor,
+            std::shared_ptr<DFA::DimensionTable> cluster_dimensions,
+            std::shared_ptr<DFA::DirectiveTable> cluster_dataflow) {
+          for(auto& var : var_list_input_tensor) {
             if(cluster_dataflow->FindDirective(var) == nullptr) {
 
               if(cluster_dimensions->HasVar(var)) {
                 int dim_sz = cluster_dimensions->GetSize(var);
                 auto dummy_directive = std::make_shared<DFA::directive::TemporalMap>(dim_sz, dim_sz, var);
-                cluster_dataflow->AddDirectiveFront(dummy_directive);
+                cluster_dataflow->AddDirective(dummy_directive);
               }
             }
           }
+        }
 
+        std::list<std::string> GetInputTensorVars() {
 
-          // Inherit missing dimensions
-          if(prev_cluster_dimensions != nullptr) {
-            for(auto& dim : *prev_cluster_dimensions) {
-              if(!cluster_dimensions->HasVar(dim->GetName())) {
-                cluster_dimensions->AddDimension(dim);
+          std::list<std::string> var_list_input_tensor;
+          for(auto& tensor : *tensors_) {
+            if(tensor->GetTensorClass() == TensorClass::InputTensor) {
+              auto coupled_vars = tensor->GetCoupledVariables();
+
+              for(auto var : *coupled_vars) {
+                var_list_input_tensor.push_back(var);
               }
             }
           }
+          var_list_input_tensor.sort();
+          var_list_input_tensor.unique();
 
-//          std::cout << "Current cluster level: " << current_cluster_level <<  std::endl;
+          return var_list_input_tensor;
+        }
 
-          auto new_cluster = std::make_shared<DFA::ClusterUnit>(current_cluster_level,
-                                                                last_cluster_size,
-                                                                cluster_dataflow,
-                                                                cluster_dimensions,
-                                                                tensors_,
-                                                                nocs_->at(current_cluster_level));
+        void ConstructLowerClusterDimensionTable(
+            std::list<std::string> var_list_input_tensor,
+            std::shared_ptr<DFA::DimensionTable> prev_cluster_dimensions,
+            std::shared_ptr<DFA::DimensionTable> cluster_dimensions,
+            std::shared_ptr<DFA::DirectiveTable> cluster_dataflow) {
 
-          clusters_->PutCluster(new_cluster);
+          assert(prev_cluster_dimensions != nullptr);
 
+          // Update Dimension table; new dimension = mapping size at upper cluster
+          for(auto var : var_list_input_tensor) {
+            auto directive = cluster_dataflow->FindDirective(var);
 
-        } // End of function
+            //Deal with edge cases
+            int final_dim_sz = std::min(directive->GetSize(), prev_cluster_dimensions->GetSize(var));
+            int inner_stride = prev_cluster_dimensions->GetInnerStride(var);
+            int outer_stride = prev_cluster_dimensions->GetOuterStride(var);
+            auto dim = std::make_shared<DFA::LayerDimension>(var, final_dim_sz, outer_stride, inner_stride);
+            cluster_dimensions->AddDimension(dim);
+          }
+        }
 
-        void ConvertToInputCentric(std::shared_ptr<DFA::DirectiveTable> dataflow) {
+        void ConvertToInputCentric(
+            std::shared_ptr<DFA::DirectiveTable> dataflow) {
 
           int IX_size, IY_size, R_size, S_size, OX_size, OY_size;
           bool has_IY = false;
@@ -387,40 +354,40 @@ namespace maestro {
           bool has_OX =false;
 
           for(auto directive : *dataflow) {
-            if(directive->GetVariable() == "Y") {
+            if(directive->GetVariable() == DFSL::layer_dim_input_height_) {
               has_IY = true;
               IY_size = directive->GetSize();
             }
-            else if(directive->GetVariable() == "X") {
+            else if(directive->GetVariable() == DFSL::layer_dim_input_width_) {
               has_IX = true;
               IX_size = directive->GetSize();
             }
-            else if(directive->GetVariable() == "X'") {
-              has_OX = true;
-              OX_size = directive->GetSize();
-            }
-            else if(directive->GetVariable() == "Y'") {
+            else if(directive->GetVariable() == DFSL::layer_dim_output_height_) {
               has_OY = true;
               OY_size = directive->GetSize();
             }
-            else if(directive->GetVariable() == "R") {
+            else if(directive->GetVariable() == DFSL::layer_dim_output_width_) {
+              has_OX = true;
+              OX_size = directive->GetSize();
+            }
+            else if(directive->GetVariable() == DFSL::layer_dim_weight_height_) {
               R_size = directive->GetSize();
             }
-            else if(directive->GetVariable() == "S") {
+            else if(directive->GetVariable() == DFSL::layer_dim_weight_width_) {
               S_size = directive->GetSize();
             }
           }
 
           if(!has_IX && has_OX) {
-            int directive_idx = dataflow->GetDirectiveIdx("X'");
-            dataflow->at(directive_idx)->SetVariable("X");
-            dataflow->at(directive_idx)->SetSize(OX_size + S_size - 1);
+            int directive_idx = dataflow->GetDirectiveIdx(DFSL::layer_dim_output_width_);
+            dataflow->at(directive_idx)->SetVariable(DFSL::layer_dim_input_width_);
+            dataflow->at(directive_idx)->SetSize(OX_size + S_size - 1); // TODO: Fix this for special cases (non-unroll S)
           }
 
           if(!has_IY && has_OY) {
-            int directive_idx = dataflow->GetDirectiveIdx("Y'");
-            dataflow->at(directive_idx)->SetVariable("Y");
-            dataflow->at(directive_idx)->SetSize(OY_size + R_size - 1);
+            int directive_idx = dataflow->GetDirectiveIdx(DFSL::layer_dim_output_height_);
+            dataflow->at(directive_idx)->SetVariable(DFSL::layer_dim_input_height_);
+            dataflow->at(directive_idx)->SetSize(OY_size + R_size - 1); // TODO: Fix this for special cases (non-unroll R)
           }
         }
 
