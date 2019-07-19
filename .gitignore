@@ -39,3 +39,6 @@ maestro
 
 # SCONS temp files
 .sconsign*
+
+# OSX file system
+.DS_Store

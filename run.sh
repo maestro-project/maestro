@@ -1,11 +1,11 @@
 ./maestro --verbose=true \
-          --DFSL_file='data/DFSL_description/Resnet34_IS.m' \
+          --DFSL_file='data/DFSL_description/Resnet50_nlr.m' \
           --full_buffer=false \
-          --noc_bw=64 \
+          --noc_bw=256 \
           --noc_hop_latency=1 \
           --noc_mc_support=true \
           --num_pes=256 \
-          --num_pe_alus=1 \
+          --num_simd_lanes=1 \
           --l1_size=32 \
           --l2_size=512 \
           --do_implicit_reduction=true \
