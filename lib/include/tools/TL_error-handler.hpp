@@ -34,6 +34,7 @@ namespace maestro {
 				MissingDimension,
 				NotEnoughSpDim,
 				DuplicatedDimDefinition,
+				DoubleDimDefinition,
 				InvalidCluster,
 				InvalidClusterLevel,
 				IllegalClusterConstruction,
@@ -66,6 +67,10 @@ namespace maestro {
 						}
             case ErrorCode::DuplicatedDimDefinition: {
               std::cout << "(Error@ " << instance_name << ") Trying to re-define the operator dimension " << opt << std::endl;
+              break;
+            }
+            case ErrorCode::DoubleDimDefinition: {
+              std::cout << "(Error@ " << instance_name << ") Both input- and output-centric dimension definition is used. " << opt << std::endl;
               break;
             }
             case ErrorCode::InvalidCluster: {

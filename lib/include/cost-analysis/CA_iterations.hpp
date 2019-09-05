@@ -38,28 +38,28 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include "CA_analysis-types.hpp"
 
 namespace maestro {
-	namespace CA {
+  namespace CA {
 
 
-	  class IterationStatusInfo : public MAESTROClass {
-	    public:
-	      IterationStatusInfo() :
-	        MAESTROClass("IterationStatusInfo") {
-	      }
+    class IterationStatusInfo : public MAESTROClass {
+      public:
+        IterationStatusInfo() :
+          MAESTROClass("IterationStatusInfo") {
+        }
 
-	      void AddIterationInfo(std::pair<std::string, std::shared_ptr<std::list<CA::IterationStatus>>> iteration_info) {
-	        possible_status_.push_back(iteration_info);
-	      }
+        void AddIterationInfo(std::pair<std::string, std::shared_ptr<std::list<CA::IterationStatus>>> iteration_info) {
+          possible_status_.push_back(iteration_info);
+        }
 
-	    protected:
-	      std::vector<std::pair<std::string, std::shared_ptr<std::list<CA::IterationStatus>>>> possible_status_;
+      protected:
+        std::vector<std::pair<std::string, std::shared_ptr<std::list<CA::IterationStatus>>>> possible_status_;
 
-	  };
+    };
 
 
     class IterationStatusInstance : public MAESTROClass {
       public:
-	      IterationStatusInstance() :
+        IterationStatusInstance() :
           MAESTROClass("IterationStatusInstance") {
         }
 
@@ -71,41 +71,40 @@ namespace maestro {
     };
 
 
-		class UnitIterationAnalysis {
-			public:
-				UnitIterationAnalysis(std::shared_ptr<DFA::directive::Directive> dataflow_directive, int dim_bound, int num_clusters)
-					: dataflow_directive_(dataflow_directive), dimension_bound_(dim_bound), num_targ_clusters_(num_clusters) {
-				}
+    class UnitIterationAnalysis {
+      public:
+        UnitIterationAnalysis(std::shared_ptr<DFA::directive::Directive> dataflow_directive, int dim_bound, int num_clusters)
+          : dataflow_directive_(dataflow_directive), dimension_bound_(dim_bound), num_targ_clusters_(num_clusters) {
+        }
 
-				int GetNumTemporalIteration() {
-					int ret = 1;
-					if(dataflow_directive_->GetClass() == DFA::directive::DirectiveClass::TemporalMap) {
-						ret = ceil(static_cast<double>(dimension_bound_ - dataflow_directive_->GetSize() +1 ) / static_cast<double>(dataflow_directive_->GetOfs()));
-					}
-					return ret;
-				}
+        int GetNumTemporalIteration() {
+          int ret = 1;
+          if(dataflow_directive_->GetClass() == DFA::directive::DirectiveClass::TemporalMap) {
+            ret = ceil(static_cast<double>(dimension_bound_ - dataflow_directive_->GetSize() +1 ) / static_cast<double>(dataflow_directive_->GetOfs()));
+          }
+          return ret;
+        }
 
-				int GetNumSpatialIteration() {
-					int ret = 1;
-					if(dataflow_directive_->GetClass() == DFA::directive::DirectiveClass::SpatialMap) {
-						ret = ceil(static_cast<double>(dimension_bound_ - dataflow_directive_->GetSize() +1 ) / static_cast<double>(dataflow_directive_->GetOfs() * num_targ_clusters_));
-					}
-					return ret;
-				}
+        int GetNumSpatialIteration() {
+          int ret = 1;
+          if(dataflow_directive_->GetClass() == DFA::directive::DirectiveClass::SpatialMap) {
+            ret = ceil(static_cast<double>(dimension_bound_ - dataflow_directive_->GetSize() +1 ) / static_cast<double>(dataflow_directive_->GetOfs() * num_targ_clusters_));
+          }
+          return ret;
+        }
 
-				int GetNumSpatialEdgeClusters() {
-					return (dimension_bound_ - dataflow_directive_->GetSize() +1 ) % (dataflow_directive_->GetOfs() * num_targ_clusters_);
-				}
+        int GetNumSpatialEdgeClusters() {
+          return (dimension_bound_ - dataflow_directive_->GetSize() +1 ) % (dataflow_directive_->GetOfs() * num_targ_clusters_);
+        }
 
-			protected:
-				std::shared_ptr<DFA::directive::Directive> dataflow_directive_;
-				int dimension_bound_;
-				int num_targ_clusters_;
-		}; // End of class UnitIterationAnalysis
+      protected:
+        std::shared_ptr<DFA::directive::Directive> dataflow_directive_;
+        int dimension_bound_;
+        int num_targ_clusters_;
+    }; // End of class UnitIterationAnalysis
 
 
-	}; // End of namespace CA
+  }; // End of namespace CA
 }; // End of namespace maestro
 
 #endif
-

@@ -72,6 +72,100 @@ namespace maestro {
         }
       }
 
+      void CreateNetworkWithALayer(std::shared_ptr<DFA::Layer> curr_layer,
+                                   bool verbose = true) {
+
+        configuration_->network_->AddLayer(curr_layer);
+
+        if(verbose) {
+          std::cout << "Parsing finished" << std::endl;
+          std::cout <<"Network name:" << configuration_->network_->GetName() << std::endl;
+
+          for(auto& layer: *(configuration_->network_)) {
+            std::cout << layer->ToString() << std::endl;
+          }
+        }
+      }
+
+      void GetCostsFromAnalysisResultsSingleCluster(
+              std::shared_ptr<CA::CostAnalyisResults> results,
+              std::vector<long double> &costs) {
+
+        long num_computations = results->GetNumComputations();
+        costs.push_back(num_computations);
+
+        long num_abs_computations = results->GetTopNumComputations();
+        costs.push_back(num_abs_computations);
+
+        costs.push_back(results->GetRuntime(CA::EstimationType::Exact));
+        costs.push_back(results->GetRuntime(CA::EstimationType::Max));
+        costs.push_back(results->GetRuntime(CA::EstimationType::Min));
+
+        long double throughput = static_cast<long double>(num_computations) / results->GetRuntime(CA::EstimationType::Exact);
+        long double throughput_min = static_cast<long double>(num_computations) / results->GetRuntime(CA::EstimationType::Max);
+        long double throughput_max = static_cast<long double>(num_computations) / results->GetRuntime(CA::EstimationType::Min);
+
+        long double abs_throughput = static_cast<long double>(num_abs_computations) / results->GetRuntime(CA::EstimationType::Exact);
+        costs.push_back(abs_throughput);
+        long double abs_throughput_min = static_cast<long double>(num_abs_computations) / results->GetRuntime(CA::EstimationType::Max);
+        costs.push_back(abs_throughput_min);
+        long double abs_throughput_max = static_cast<long double>(num_abs_computations) / results->GetRuntime(CA::EstimationType::Min);
+        costs.push_back(abs_throughput_max);
+
+
+        int num_data_classes = static_cast<int>(DataClass::NumDataClasses);
+        long num_l1_read[num_data_classes];
+
+        long total_l1_write = 0;
+        long total_l1_read = 0;
+
+        for(auto tensor : *(configuration_->tensors_)) {
+          auto dataclass = tensor->GetDataClass();
+          double reuse_factor = static_cast<double>(num_computations) / results->GetBufferAccessCount(CA::BufferType::Downstream, CA::BufferAccessType::Write, dataclass);
+          costs.push_back(reuse_factor);
+          total_l1_write += results->GetBufferAccessCount(CA::BufferType::Downstream, CA::BufferAccessType::Write, dataclass);
+          total_l1_read += results->GetBufferAccessCount(CA::BufferType::Downstream, CA::BufferAccessType::Read, dataclass);
+        }
+
+        double overall_reuse_factor = static_cast<double>(total_l1_read) / static_cast<double>(total_l1_write);
+        costs.push_back(overall_reuse_factor);
+
+
+        long double l2_write_energy = 0;
+        long double l2_read_energy = 0;
+        long double l1_write_energy = 0;
+        long double l1_read_energy = 0;
+        long double total_energy = 0;
+
+        long double tmp;
+        for(auto tensor : *(configuration_->tensors_)) {
+          auto dataclass = tensor->GetDataClass();
+
+          tmp = results->GetBufferAccessCount(CA::BufferType::Upstream, CA::BufferAccessType::Write, dataclass) * l2_energy_multiplier;
+          l2_write_energy += tmp;
+
+          tmp = results->GetBufferAccessCount(CA::BufferType::Upstream, CA::BufferAccessType::Read, dataclass)  * l2_energy_multiplier;
+          l2_read_energy += tmp;
+
+          tmp = results->GetBufferAccessCount(CA::BufferType::Downstream, CA::BufferAccessType::Write, dataclass) * l1_energy_multiplier;
+          l1_write_energy += tmp;
+
+          tmp = results->GetBufferAccessCount(CA::BufferType::Downstream, CA::BufferAccessType::Read, dataclass) * l1_energy_multiplier;
+          l1_read_energy += tmp;
+        }
+
+        costs.push_back(l2_write_energy);
+        costs.push_back(l2_read_energy);
+        costs.push_back(l1_write_energy);
+        costs.push_back(l1_read_energy);
+        costs.push_back(results->GetPeakBWReq());
+        costs.push_back(results->GetAvgBWReq());
+
+
+        total_energy = l2_write_energy + l2_read_energy + l1_write_energy + l1_read_energy + num_computations;
+        costs.push_back(total_energy);
+      }
+
       void AddTensor(std::string tensor_name,
                      DFA::TensorClass tensor_class,
                      DataClass data_class,
@@ -282,12 +376,12 @@ namespace maestro {
       }
 
       std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>
-        AnalyzeNeuralNetwork() {
+        AnalyzeNeuralNetwork(bool verbose = true) {
         auto ret = std::make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>();
 
         int layer_id = 0;
         for(auto layer : *(configuration_->network_)) {
-          auto layer_results = AnalyzeCostAllClusters(layer_id, false, false);
+          auto layer_results = AnalyzeCostAllClusters(layer_id, false, verbose);
 
           long num_macs = this->GetNumPartialSums(layer_id);
           layer_results->at(layer_results->size()-1)->UpdateTopNumComputations(num_macs);

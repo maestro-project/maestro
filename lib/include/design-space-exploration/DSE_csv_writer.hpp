@@ -65,6 +65,11 @@ namespace maestro {
               outfile_ << tensor_name << " l1 read, " << tensor_name << " l1 write, " << tensor_name << " l2 read, " << tensor_name << " l2 write, " << tensor_name << " reuse factor" << ",";
             }
 
+            outfile_ << "Ingress Delay (Min), Ingress Delay (Max), Ingress Delay (Avg), Egress Delay (Min), Egress Delay (Max),  Egress Delay (Avg),"
+                     << "Compute Delay (Min), Compute Delay (Min), Compute Delay (Avg),";
+            outfile_ << "Avg number of utilized PEs, Arithmetic Intensity";
+
+
             outfile_ << std::endl;
           }
 
@@ -86,6 +91,10 @@ namespace maestro {
               auto tensor_name = tensor->GetTensorName();
               outfile_ << tensor_name << " l1 read, " << tensor_name << " l1 write, " << tensor_name << " l2 read, " << tensor_name << " l2 write, " << tensor_name << " reuse factor" << ",";
             }
+
+            outfile_ << "Ingress Delay (Min), Ingress Delay (Max), Ingress Delay (Avg), Egress Delay (Min), Egress Delay (Max),  Egress Delay (Avg),"
+                     << "Compute Delay (Min), Compute Delay (Min), Compute Delay (Avg),";
+            outfile_ << "Avg number of utilized PEs, Arithmetic Intensity";
 
             outfile_ << std::endl;
           }
@@ -140,7 +149,13 @@ namespace maestro {
               auto tensor_name = tensor->GetTensorName();
               outfile_ << tensor_name << " l1 read, " << tensor_name << " l1 write, " << tensor_name << " l2 read, " << tensor_name << " l2 write, " << tensor_name << " reuse factor" << std::endl;
             }
+
+            outfile_ << "Ingress Delay (Min), Ingress Delay (Max), Ingress Delay (Avg), Egress Delay (Min), Egress Delay (Max),  Egress Delay (Avg),"
+                     << "Compute Delay (Min), Compute Delay (Min), Compute Delay (Avg),";
+            outfile_ << "Avg number of utilized PEs, Arithmetic Intensity";
+
           }
+
           outfile_ << std::endl;
         }
 
@@ -220,10 +235,38 @@ namespace maestro {
             long double reuse_factor = static_cast<long double>(l1_read) / static_cast<long double>(l1_write);
             outfile_ << reuse_factor << ", ";
           }
+          long ingress_delay_[static_cast<int>(CA::ValueType::NumValTypes)];
+          long egress_delay_[static_cast<int>(CA::ValueType::NumValTypes)];
+          long compute_delay_[static_cast<int>(CA::ValueType::NumValTypes)];
+
+          ingress_delay_[static_cast<int>(CA::ValueType::Min)] = cost_analysis_results->GetDelay(CA::DelayType::Ingress, CA::ValueType::Min);
+          ingress_delay_[static_cast<int>(CA::ValueType::Max)] = cost_analysis_results->GetDelay(CA::DelayType::Ingress, CA::ValueType::Max);
+          ingress_delay_[static_cast<int>(CA::ValueType::Avg)] = cost_analysis_results->GetDelay(CA::DelayType::Ingress, CA::ValueType::Avg);
+
+          egress_delay_[static_cast<int>(CA::ValueType::Min)] = cost_analysis_results->GetDelay(CA::DelayType::Egress, CA::ValueType::Min);
+          egress_delay_[static_cast<int>(CA::ValueType::Max)] = cost_analysis_results->GetDelay(CA::DelayType::Egress, CA::ValueType::Max);
+          egress_delay_[static_cast<int>(CA::ValueType::Avg)] = cost_analysis_results->GetDelay(CA::DelayType::Egress, CA::ValueType::Avg);
+
+          compute_delay_[static_cast<int>(CA::ValueType::Min)] = cost_analysis_results->GetDelay(CA::DelayType::Computation, CA::ValueType::Min);
+          compute_delay_[static_cast<int>(CA::ValueType::Max)] = cost_analysis_results->GetDelay(CA::DelayType::Computation, CA::ValueType::Max);
+          compute_delay_[static_cast<int>(CA::ValueType::Avg)] = cost_analysis_results->GetDelay(CA::DelayType::Computation, CA::ValueType::Avg);
+
+
+          outfile_ << ingress_delay_[static_cast<int>(CA::ValueType::Min)]
+                      << ", " << ingress_delay_[static_cast<int>(CA::ValueType::Max)]
+                      << ", " << ingress_delay_[static_cast<int>(CA::ValueType::Avg)] << ", "
+                   << egress_delay_[static_cast<int>(CA::ValueType::Min)]
+                      << ", " << egress_delay_[static_cast<int>(CA::ValueType::Max)]
+                      << ", " << egress_delay_[static_cast<int>(CA::ValueType::Avg)] << ", "
+                   << compute_delay_[static_cast<int>(CA::ValueType::Min)]
+                      << ", " << compute_delay_[static_cast<int>(CA::ValueType::Max)]
+                      << ", " << compute_delay_[static_cast<int>(CA::ValueType::Avg)];
+
+          outfile_ << ", " << cost_analysis_results->GetNumAvgActiveClusters();
+          outfile_ << ", " << cost_analysis_results->GetArithmeticIntensity();
 
           outfile_ << std::endl;
         }
-
 
 
   			bool Valid() {

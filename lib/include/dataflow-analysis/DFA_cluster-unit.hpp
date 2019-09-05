@@ -609,35 +609,47 @@ namespace maestro {
 
         void AnalyzeSpatialEdgeCase() {
           auto sp_map_directive = dataflow_->at(upper_spatial_map_idx_);
-          auto sp_dim_sz = dimensions_->GetSize(sp_map_directive->GetVariable());
           auto sp_var = sp_map_directive->GetVariable();
+          auto sp_dim_sz = dimensions_->GetSize(sp_var);
 
           // Handle sliding window overlaps
+          /*
           if(dimensions_->IsOverlapped(sp_var) && !dimensions_->IsSlidingDim(sp_var)) {
             auto overlap_dim = dimensions_->GetOverlappingDim(sp_var);
             sp_dim_sz = sp_dim_sz - dimensions_->GetSize(overlap_dim) + 1;
           }
+           */
+          int map_size = sp_map_directive->GetSize();
+          int map_ofs = sp_map_directive->GetOfs();
 
           // TODO: Double check this; Currently it ignores out-of-bound caused by mapping size
           // Note: It should be fine with overlapped dimensions (input column/row in conv) if the given dataflow is legal
           // Note: This is now handled below (beta version)
           int each_sp_iter_base_coverage = (sp_map_directive->GetOfs() * cluster_size_);
           int each_sp_iter_full_coverage = (sp_map_directive->GetOfs() * (cluster_size_-1)) + sp_map_directive->GetSize();
-          //int eash_sp_iter_
 
-//          num_steady_spatial_iterations_ = sp_dim_sz / each_sp_iter_base_coverage;
           if(sp_dim_sz > each_sp_iter_full_coverage) {
-            auto sp_dim_to_cover_after_first_sp_iter = (sp_dim_sz-each_sp_iter_full_coverage);
-            num_steady_spatial_iterations_ = sp_dim_to_cover_after_first_sp_iter / each_sp_iter_base_coverage;
-            num_edge_spatial_iterations_ = (sp_dim_to_cover_after_first_sp_iter % each_sp_iter_base_coverage == 0)? 0 : 1;
-            num_spatial_edge_clusters_ = sp_dim_to_cover_after_first_sp_iter % each_sp_iter_base_coverage;
+            auto sp_dim_to_cover_after_first_sp_iter = (sp_dim_sz-each_sp_iter_base_coverage);
 
+            num_steady_spatial_iterations_ = ((sp_dim_sz - map_size) / map_ofs + 1) / cluster_size_ -1;
+            num_edge_spatial_iterations_ = ((num_steady_spatial_iterations_ + 1) * (map_ofs * cluster_size_) + each_sp_iter_full_coverage > sp_dim_sz )? 1 : 0;
+
+            int remaining_items = sp_dim_sz - (num_steady_spatial_iterations_ + 1) * map_ofs * cluster_size_;
+
+            if(remaining_items < map_size) {
+              num_spatial_edge_clusters_ = 1;
+            }
+            else {
+              num_spatial_edge_clusters_ = (remaining_items - map_size) / map_ofs + 1; // TODO: Fix
+            }
           }
           else {
             num_steady_spatial_iterations_ = 0;
             num_edge_spatial_iterations_ = 1;
             if(sp_dim_sz > sp_map_directive->GetSize()) {
-              num_spatial_edge_clusters_ = (sp_dim_sz - sp_map_directive->GetSize()) / sp_map_directive->GetOfs();
+              num_spatial_edge_clusters_ = (sp_dim_sz -  map_size) / map_ofs + 1; // TODO: Fix
+              int sp_edge_clsuter_coverage = (sp_map_directive->GetOfs() * (num_spatial_edge_clusters_-1)) + sp_map_directive->GetSize();
+              if(sp_edge_clsuter_coverage < sp_dim_sz) num_spatial_edge_clusters_++;
             }
             else {
               num_spatial_edge_clusters_ = 1;

@@ -67,6 +67,8 @@ namespace maestro {
       std::string optimization_target = "runtime";
       bool verbose = false;
       bool print_design_space_to_file = false;
+      bool print_res_to_screen = true;
+      int message_print_lv = 0;
       int pe_tick = 4;
       int bw_tick = 4;
 
@@ -78,6 +80,8 @@ namespace maestro {
           po::options_description desc("General Options");
           desc.add_options()
               ("help", "Display help message")
+              ("print_res", po::value<bool>(&print_res_to_screen) ,"Print the eval results to screen")
+              ("msg_print_lv", po::value<int>(&message_print_lv) ,"the name of dataflow description file")
           ;
 
           po::options_description io("File IO options");

@@ -26,6 +26,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include "BASE_constants.hpp"
 
 #include "DFA_layer.hpp"
+#include "DFA_iteration-status.hpp"
 #include "CA_analysis-types.hpp"
 
 namespace maestro {
@@ -33,6 +34,8 @@ namespace maestro {
 
     enum class BufferType {Upstream, Downstream};
     enum class BufferAccessType {Read, Write};
+    enum class DelayType {Ingress, Egress, Computation, NumDelayTypes};
+    enum class ValueType {Min, Max, Avg, NumValTypes};
 
     class CostAnalyisResults : public MAESTROClass {
       public:
@@ -41,6 +44,19 @@ namespace maestro {
           cluster_level_(-1),
           num_computations_(0),
           MAESTROClass ("CostAnalysisResults on a cluster in an undefined level") {
+          iter_status_info_ = std::make_shared<std::vector<std::shared_ptr<DFA::IterationStatus>>>();
+
+          ingress_delay_[static_cast<int>(ValueType::Max)] = 0;
+          ingress_delay_[static_cast<int>(ValueType::Min)] = std::numeric_limits<int>::max();
+          ingress_delay_[static_cast<int>(ValueType::Avg)] = 0;
+
+          egress_delay_[static_cast<int>(ValueType::Max)] = 0;
+          egress_delay_[static_cast<int>(ValueType::Min)] = std::numeric_limits<int>::max();
+          egress_delay_[static_cast<int>(ValueType::Avg)] = 0;
+
+          compute_delay_[static_cast<int>(ValueType::Max)] = 0;
+          compute_delay_[static_cast<int>(ValueType::Min)] = std::numeric_limits<int>::max();
+          compute_delay_[static_cast<int>(ValueType::Avg)] = 0;
         }
 
 
@@ -49,6 +65,19 @@ namespace maestro {
           cluster_level_(cluster_level),
           num_computations_(0),
           MAESTROClass ("CostAnalysisResults at cluster level" + std::to_string(cluster_level)) {
+          iter_status_info_ = std::make_shared<std::vector<std::shared_ptr<DFA::IterationStatus>>>();
+
+          ingress_delay_[static_cast<int>(ValueType::Max)] = 0;
+          ingress_delay_[static_cast<int>(ValueType::Min)] = std::numeric_limits<int>::max();
+          ingress_delay_[static_cast<int>(ValueType::Avg)] = 0;
+
+          egress_delay_[static_cast<int>(ValueType::Max)] = 0;
+          egress_delay_[static_cast<int>(ValueType::Min)] = std::numeric_limits<int>::max();
+          egress_delay_[static_cast<int>(ValueType::Avg)] = 0;
+
+          compute_delay_[static_cast<int>(ValueType::Max)] = 0;
+          compute_delay_[static_cast<int>(ValueType::Min)] = std::numeric_limits<int>::max();
+          compute_delay_[static_cast<int>(ValueType::Avg)] = 0;
         }
 
         long GetRuntime(CA::EstimationType estimation_type = CA::EstimationType::Exact) {
@@ -78,6 +107,18 @@ namespace maestro {
           return ret;
         }
 
+        long GetDelay(DelayType delay_type, ValueType val_type) {
+          if(delay_type == DelayType::Ingress) {
+            return ingress_delay_[static_cast<int>(val_type)];
+          }
+          else if(delay_type == DelayType::Egress) {
+            return egress_delay_[static_cast<int>(val_type)];
+          }
+          else {
+            return compute_delay_[static_cast<int>(val_type)];
+          }
+        }
+
         void UpdateBufferAccessCount(BufferType target_buffer, BufferAccessType access_type, long counts, DataClass data_class) {
 
           int data_class_id = static_cast<int>(data_class);
@@ -105,6 +146,18 @@ namespace maestro {
           }
           else {
             downstream_buffer_size_req_[data_class_id] = size_req;
+          }
+        }
+
+        void UpdateDelay(DelayType delay_type, ValueType val_type, long delay) {
+          if(delay_type == DelayType::Ingress) {
+            ingress_delay_[static_cast<int>(val_type)] = delay;
+          }
+          else if(delay_type == DelayType::Egress) {
+            egress_delay_[static_cast<int>(val_type)] = delay;
+          }
+          else {
+            compute_delay_[static_cast<int>(val_type)] = delay;
           }
         }
 
@@ -181,19 +234,54 @@ namespace maestro {
           return layer_type_;
         }
 
+        void SetNumSpatialOccurrences(long num_occ) {
+          num_sp_occurrences_ = num_occ;
+        }
+
+        long GetNumSpatialOccurrences() {
+          return num_sp_occurrences_;
+        }
+
+        void AddIterStatusInfo(std::shared_ptr<DFA::IterationStatus> iter_status) {
+          iter_status_info_->push_back(iter_status);
+        }
+
+        std::shared_ptr<std::vector<std::shared_ptr<DFA::IterationStatus>>> GetIterStatusStack() {
+          return iter_status_info_;
+        }
+
+        void SetNumAvgActiveClusters(double active_clusters) {
+          avg_num_active_unit_clusters_ = active_clusters;
+        }
+
+        double GetNumAvgActiveClusters() {
+          return avg_num_active_unit_clusters_;
+        }
+
+        void SetArithmeticIntensity(double new_arin) {
+          arithmetic_intensity_ = new_arin;
+        }
+
+        double GetArithmeticIntensity() {
+          return arithmetic_intensity_;
+        }
+
       protected:
         LayerType layer_type_;
+        std::shared_ptr<std::vector<std::shared_ptr<DFA::IterationStatus>>> iter_status_info_;
 
+        long num_sp_occurrences_ = 1;
         long cluster_level_ = 0;
         long num_sub_clusters_ = 0;
+        double avg_num_active_unit_clusters_ = 0;
+        double arithmetic_intensity_ = 0;
 
-//        CA::EstimationType estimation_type;  = CA::EstimationType::Exact
         long runtime_[static_cast<int>(CA::EstimationType::NumEstimationTypes)]= {0, };
 
-        long upstream_buffer_write_estimate_[static_cast<int>(DataClass::NumDataClasses)] = {0}; // This is just an estimate in multi-cluster cases
+        long upstream_buffer_write_estimate_[static_cast<int>(DataClass::NumDataClasses)] = {0};
         long upstream_buffer_read_[static_cast<int>(DataClass::NumDataClasses)] = {0};
         long downstream_buffer_write_[static_cast<int>(DataClass::NumDataClasses)] = {0};
-        long downstream_buffer_read_estimate[static_cast<int>(DataClass::NumDataClasses)] = {0}; // This is just an estimate in multi-cluster cases
+        long downstream_buffer_read_estimate[static_cast<int>(DataClass::NumDataClasses)] = {0};
 
         long upstream_buffer_pure_read_[static_cast<int>(DataClass::NumDataClasses)] = {0};
         long downstream_buffer_pure_read_[static_cast<int>(DataClass::NumDataClasses)] = {0};
@@ -202,6 +290,10 @@ namespace maestro {
         long downstream_buffer_size_req_[static_cast<int>(DataClass::NumDataClasses)] = {0};
 
         double bandwidth_requirement_[static_cast<int>(DataClass::NumDataClasses)] = {0};
+
+        long ingress_delay_[static_cast<int>(ValueType::NumValTypes)] = {0};
+        long egress_delay_[static_cast<int>(ValueType::NumValTypes)] = {0};
+        long compute_delay_[static_cast<int>(ValueType::NumValTypes)] = {0};
 
         long peak_bw_req_ = 0;
         double avg_bw_req_ = 0;

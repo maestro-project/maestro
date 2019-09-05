@@ -23,7 +23,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #ifndef MAESTRO_DFA_CONV_CLUSTER_ANALYSIS_HPP_
 #define MAESTRO_DFA_CONV_CLUSTER_ANALYSIS_HPP_
 
-#define DEBUG_CLUSTER_ANALYSIS
+//#define DEBUG_CLUSTER_ANALYSIS
 
 #include <vector>
 #include <memory>
@@ -142,7 +142,6 @@ namespace maestro {
                 std::shared_ptr<abstract_hw::NetworkOnChipModel> noc = nocs_->at(current_cluster_level);
 
                 auto var_list_input_tensor = GetInputTensorVars();
-
                 ConvertToInputCentric(cluster_dataflow);
 
                 /* Complement dataflow; automotically guess missing directives */
@@ -152,8 +151,8 @@ namespace maestro {
                 UnrollMissingDirectives(var_list_input_tensor, cluster_dimensions, cluster_dataflow);
 
                 bool is_top_cluster = (current_cluster_level == num_cluster_lvs);
-
                 ApplyOuterStride(is_top_cluster, cluster_dataflow, cluster_dimensions);
+
 
 #ifdef DEBUG_CLUSTER_ANALYSIS
                 std::cout << "Cluster level: " << current_cluster_level << std::endl;
@@ -265,9 +264,7 @@ namespace maestro {
                 int adjusted_dim_size;
               }
             }
-
           }
-
 
         }
 

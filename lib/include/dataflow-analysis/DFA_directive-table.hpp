@@ -168,6 +168,15 @@ namespace maestro {
 					directives_->push_back(new_directive);
 				}
 
+			void DeleteDirectives(){
+				directives_->erase(directives_->begin(),
+								   directives_->begin() + directives_->size());
+			}
+
+			void ReverseDirectives() {
+				std::reverse(std::begin(*directives_), std::end(*directives_));
+			}
+
 				int size() {
 				  return directives_->size();
 				}
