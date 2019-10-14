@@ -35,6 +35,9 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 
 --l2_size=512 : l2 buffer size (inactive in the current dev version)
 
+# How to convert Pytorch model to MAESTRO dataflow
+Use [torchvision.models]
+
 # How to change the DNN model and dataflow
 Create a DFSL file under "data/DFSL_description" and point the file using --DFSL_file parameter in "run.sh"
 
