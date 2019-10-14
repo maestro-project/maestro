@@ -50,7 +50,7 @@ Run MAESTRO
 
 > ./run.sh
 ## Change the input arguement
-> python torch_to_maestro.py --input_size (3,224,224) --model mobilenet_v2 --dataflow os --outfile out.m 
+> python torch_to_maestro.py --input_size 3,224,224 --model mobilenet_v2 --dataflow os --outfile out.m 
 
 --input_size: the input image size of the first layer
 
