@@ -37,6 +37,7 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 
 # How to convert Pytorch model to MAESTRO dataflow
 > cd data/pytorch_example
+
 Use [torchvision.models](https://pytorch.org/docs/stable/torchvision/models.html)
 ## Run with default setting
 > python torch_to_maestro.py
