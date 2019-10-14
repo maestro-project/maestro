@@ -35,6 +35,11 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 
 --l2_size=512 : l2 buffer size (inactive in the current dev version)
 
+# How to change the DNN model and dataflow
+Create a DFSL file under "data/DFSL_description" and point the file using --DFSL_file parameter in "run.sh"
+
+For syntax of the DFSL file, please refer to other DFSL files in data/DFSL_description.
+
 # How to convert Pytorch model to MAESTRO dataflow
 > cd data/pytorch_example
 
@@ -49,7 +54,7 @@ Change the contents of "run.sh"
 Run MAESTRO
 
 > ./run.sh
-## Change the input arguement
+### Change the input arguement
 > python torch_to_maestro.py --input_size 3,224,224 --model mobilenet_v2 --dataflow os --outfile out.m 
 
 --input_size: the input image size of the first layer
@@ -61,10 +66,7 @@ Run MAESTRO
 --outfile: the MAESTRO dataflow output file name
 
 
-# How to change the DNN model and dataflow
-Create a DFSL file under "data/DFSL_description" and point the file using --DFSL_file parameter in "run.sh"
 
-For syntax of the DFSL file, please refer to other DFSL files in data/DFSL_description.
 
 # Contributors
 Hyoukjun Kwon (hyoukjun@gatech.edu): Main developer, developed core framework and functionalities
