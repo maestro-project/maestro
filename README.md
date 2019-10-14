@@ -41,8 +41,8 @@ Create a DFSL file under "data/DFSL_description" and point the file using --DFSL
 For syntax of the DFSL file, please refer to other DFSL files in data/DFSL_description.
 
 # Contributors
-Hyoukjun Kwon (hyoukjun@gatech.edu): Core framework and functionalities
+Hyoukjun Kwon (hyoukjun@gatech.edu): Main developer, developed core framework and functionalities
 
-Prasanth Chatarasi (cprasanth@gatech.edu): Improving APIs
+Prasanth Chatarasi (cprasanth@gatech.edu): Improved APIs
 
-Felix (Sheng-Chun) Kao (felix@gatech.edu): Pytorch front-end
+Felix (Sheng-Chun) Kao (felix@gatech.edu): Implemented Pytorch front-end
