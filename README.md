@@ -36,7 +36,26 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 --l2_size=512 : l2 buffer size (inactive in the current dev version)
 
 # How to convert Pytorch model to MAESTRO dataflow
-Use [torchvision.models]
+> cd data/pytorch_example
+Use [torchvision.models](https://pytorch.org/docs/stable/torchvision/models.html)
+## Run with default setting
+> python torch_to_maestro.py
+## Run MAESTRO with the converted dataflow file
+Change the contents of "run.sh"
+--DFSL_file='data/pytorch_example/out/out.m'
+Run MAESTRO
+> ./run.sh
+## Change the input arguement
+> python torch_to_maestro.py --input_size (3,224,224) --model mobilenet_v2 --dataflow os --outfile out.m 
+
+--input_size: the input image size of the first layer
+
+--model: the model name from torchvision.models
+
+--dataflow: the dataflow for each layer, choose from "os, ws, rs, dla"
+
+--outfile: the MAESTRO dataflow output file name
+
 
 # How to change the DNN model and dataflow
 Create a DFSL file under "data/DFSL_description" and point the file using --DFSL_file parameter in "run.sh"
