@@ -42,5 +42,7 @@ For syntax of the DFSL file, please refer to other DFSL files in data/DFSL_descr
 
 # Contributors
 Hyoukjun Kwon (hyoukjun@gatech.edu): Core framework and functionalities
+
 Prasanth Chatarasi (cprasanth@gatech.edu): Improving APIs
+
 Felix (Sheng-Chun) Kao (felix@gatech.edu): Pytorch front-end
