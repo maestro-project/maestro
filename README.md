@@ -43,8 +43,11 @@ Use [torchvision.models](https://pytorch.org/docs/stable/torchvision/models.html
 > python torch_to_maestro.py
 ## Run MAESTRO with the converted dataflow file
 Change the contents of "run.sh"
+
 --DFSL_file='data/pytorch_example/out/out.m'
+
 Run MAESTRO
+
 > ./run.sh
 ## Change the input arguement
 > python torch_to_maestro.py --input_size (3,224,224) --model mobilenet_v2 --dataflow os --outfile out.m 
