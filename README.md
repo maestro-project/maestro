@@ -39,3 +39,8 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 Create a DFSL file under "data/DFSL_description" and point the file using --DFSL_file parameter in "run.sh"
 
 For syntax of the DFSL file, please refer to other DFSL files in data/DFSL_description.
+
+# Contributors
+Hyoukjun Kwon (hyoukjun@gatech.edu): Core framework and functionalities
+Prasanth Chatarasi (cprasanth@gatech.edu): Improving APIs
+Felix (Sheng-Chun) Kao (felix@gatech.edu): Pytorch front-end
