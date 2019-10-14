@@ -19,7 +19,7 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 
 --verbose=true/false : print out detailed information or not
 
---DFSL_file='data/DFSL_description/Resnet34_IS.m' : Specify the target dataflow and layer description file
+--DFSL_file='data/DFSL_description/Resnet50_dla.m' : Specify the target dataflow and layer description file
 
 --noc_bw=64 : NoC bandwidth
 
