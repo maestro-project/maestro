@@ -12,7 +12,7 @@ device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--input_size', type=tuple, default=(3,224,224), help='input size')
+    parser.add_argument('--input_size', type=str, default="3,224,224", help='input size')
     parser.add_argument('--model', type=str, default="mobilenet_v2", help='model from torchvision choces: \
                                                                           resnet18, alexnet, vgg16, squeezenet, densenet, \
                                                                             inception, googlenet, shufflenet, mobilenet,\
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     parser.add_argument('--dataflow', type=str, default="os", help='dataflow choices: dla, os, ws, rs')
     parser.add_argument('--outfile', type=str, default="out.m", help='output file name')
     opt = parser.parse_args()
-    INPUT_SIZE = opt.input_size
+    INPUT_SIZE = tuple((int(d) for d in str.split(opt.input_size, ",")))
     model = getattr(models, opt.model)()
     model = model.to(device)
     mae_summary = summary(model, INPUT_SIZE)
