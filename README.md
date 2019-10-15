@@ -8,6 +8,8 @@ SCONS build system (scons)
 
 Boost libarary (libboost-all-dev)
 
+Python 2.7 or later
+
 # How to compile the code
 > scons
 
@@ -17,7 +19,11 @@ Boost libarary (libboost-all-dev)
 # How to change the parameters
 Change the contents of "run.sh" For parameters other than listed below, please ignore it; active development is going on them so correct functionailty is not guaranteed.
 
---verbose=true/false : print out detailed information or not
+--print_res=true/false : If set true, MAESTRO prints out detailed cost information to the screen
+
+--print_res_csv_file=true/false : If set true, MAESTRO prints out a csv file that contains various statistics
+
+--print_log_file=true/false : If set true, MAESTRO prints out a log file that contains various information of detailed computation patterns to "log.txt"
 
 --DFSL_file='data/DFSL_description/Resnet50_dla.m' : Specify the target dataflow and layer description file
 
@@ -31,9 +37,9 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 
 --num_pe_alus=1 : PE ALU vector width
 
---l1_size=32 : l1 buffer size (inactive in the current dev version)
+--l1_size=32 : l1 buffer size
 
---l2_size=512 : l2 buffer size (inactive in the current dev version)
+--l2_size=512 : l2 buffer size
 
 # How to change the DNN model and dataflow
 Create a DFSL file under "data/DFSL_description" and point the file using --DFSL_file parameter in "run.sh"
