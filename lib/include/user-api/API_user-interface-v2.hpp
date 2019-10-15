@@ -113,9 +113,10 @@ namespace maestro {
       std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>
         AnalyzeNeuralNetwork(
             bool print_results_to_screen = false,
-            bool print_results_to_file = false) {
-        std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>
-          ret = std::make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>();
+            bool print_results_to_file = false,
+            bool print_log_to_file = false) {
+//        std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>
+          auto ret = std::make_shared<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>();
 
         int layer_id = 0;
         for(auto layer : *(configuration_->network_)) {
@@ -675,7 +676,7 @@ namespace maestro {
               }
 
               if(tensor_info_mapping_table_->find(layer_type) == tensor_info_mapping_table_->end()) {
-                tensor_info_idx = ConfigConvTensors(layer_type,has_batch);
+                tensor_info_idx = ConfigConvTensors(layer_type, has_batch);
                 (*tensor_info_mapping_table_)[layer_type] = tensor_info_idx;
               }
               else {
@@ -708,15 +709,18 @@ namespace maestro {
         message_printer_->PrintMsg(1, "Cluster construction and analysis is done");
       }
 
-      std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>> AnalyzeCostAllClusters(int layer_id, bool show_all_cluster_results = false, bool verbose = false) {
+      std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>> AnalyzeCostAllClusters(int layer_id, bool print_results = false, bool write_log_file = false) {
         auto target_cluster_analysis = configuration_->cluster_analysis_->at(layer_id);
         auto clusters = target_cluster_analysis->GetClusters();
         auto layer_type = clusters->GetLayerType();
         int tensor_info_idx = (*tensor_info_mapping_table_)[layer_type];
 
+//        auto perf_analysis = std::make_unique<CA::CostAnalysisEngine>
+//                               (configuration_->tensors_->at(tensor_info_idx), clusters, configuration_->target_accelerator_->GetVectorWidth());
         auto perf_analysis = std::make_unique<CA::CostAnalysisEngine>
-                               (configuration_->tensors_->at(tensor_info_idx), clusters, configuration_->target_accelerator_->GetVectorWidth());
-        auto results = perf_analysis->AnalyzeEntireCluster(verbose);
+                               (configuration_, configuration_->tensors_->at(tensor_info_idx), clusters);
+
+        auto results = perf_analysis->AnalyzeEntireCluster(write_log_file);
 /*
         if(verbose) {
           for(int cluster_lv = 0; cluster_lv < target_cluster_analysis->GetClusters()->size(); cluster_lv++) {
@@ -732,8 +736,12 @@ namespace maestro {
           }
         }
 */
-
-        if(show_all_cluster_results && verbose) {
+        if(print_results) {
+          auto top_cluster_res = results->at(results->size()-1);
+          PrintAnalysisResultsSingleCluster(top_cluster_res);
+        }
+/*
+        if(show_all_cluster_results && print_results) {
           int cluster_lv = 0;
           for(auto& cluster_res : *results) {
             PrintAnalysisResultsSingleCluster(cluster_res);
@@ -744,7 +752,7 @@ namespace maestro {
           auto top_cluster_res = results->at(results->size()-1);
           PrintAnalysisResultsSingleCluster(top_cluster_res);
         }
-
+*/
         return results;
       }
 
@@ -992,23 +1000,13 @@ namespace maestro {
 
 
         std::cout << "Num MACs: " << num_computations << std::endl;
-        std::cout << "Num MACs (absolute): " << num_abs_computations << std::endl;
 
 
         std::cout << std::endl;
         std::cout << "[Performance Analysis]" << std::endl;
         std::cout << "Runtime: " << results->GetRuntime(CA::EstimationType::Exact) << " cycles" << std::endl;
-        std::cout << "Runtime(Min): " << results->GetRuntime(CA::EstimationType::Min) << " cycles" << std::endl;
-        std::cout << "Runtime(Max): " << results->GetRuntime(CA::EstimationType::Max) << " cycles" << std::endl;
 
         std::cout << "Throughput: " << throughput << " MACs/cycle" << std::endl;
-        std::cout << "Throughput(Min): " << throughput_min << " MACs/cycle" << std::endl;
-        std::cout << "Throughput(Max): " << throughput_max << " MACs/cycle" << std::endl;
-
-
-        std::cout << "AbsThroughput: " << abs_throughput << " MACs/cycle" << std::endl;
-        std::cout << "AbsThroughput(Min): " << abs_throughput_min << " MACs/cycle" << std::endl;
-        std::cout << "AbsThroughput(Max): " << abs_throughput_max << " MACs/cycle" << std::endl;
 
 
         std::cout << "[Buffer Access Analysis]" << std::endl;

@@ -46,7 +46,9 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 namespace maestro {
 	namespace DFSL {
 
-		enum class ParserState{Idle, Network_Identifier, Network_Name, Network_Body,
+		enum class ParserState{Idle,
+		                       Constant_Identifier, Constant_Name, Constant_Body,
+		                       Network_Identifier, Network_Name, Network_Body,
 				                   Layer_Identifier, Layer_Name, Layer_Body, Layer_Type,
 				                   Stride_Decl, Stride_Body, Stride_Size,
 				                   Dimension_Decl, Dimension_Body, Dimension_Size,
@@ -102,6 +104,8 @@ namespace maestro {
 					DFA::directive::DirectiveClass curr_directive_class = DFA::directive::DirectiveClass::Invalid;
 					std::shared_ptr<DFA::directive::Directive> curr_directive = nullptr;
 
+					std::shared_ptr<std::map<std::string, int>> constant_map = std::make_shared<std::map<std::string, int>>();
+
 					std::string stride_dim;
 
 					int map_size = 0;
@@ -129,11 +133,27 @@ namespace maestro {
                   if(tkn == DFSL::network_decl_) {
                     state_ = ParserState::Network_Identifier;
                   }
+                  else if(tkn == DFSL::constant_decl_) {
+                    state_ = ParserState::Constant_Name;
+                  }
                   else if(tkn == DFSL::accelerator_decl_) {
                     state_ = ParserState::Accelerator_Identifier;
                   }
                   break;
 							  }
+
+							  case ParserState::Constant_Name: {
+							    tmp_name = tkn;
+							    state_ = ParserState::Constant_Body;
+							    break;
+							  }
+
+                case ParserState::Constant_Body: {
+                  int value = std::atoi(tkn.c_str());
+                  (*constant_map)[tmp_name] = value;
+                  state_ = ParserState::Idle;
+                  break;
+                }
 
                 case ParserState::Network_Identifier: {
 
@@ -359,7 +379,16 @@ namespace maestro {
                 }
 
                 case ParserState::Dimension_Size: {
-                  int size = std::atoi(tkn.c_str());
+                  int size;
+
+                  if(constant_map->find(tkn) == constant_map->end()) {
+                    size = std::atoi(tkn.c_str());
+                  }
+                  else {
+                    size = (*constant_map)[tkn];
+                  }
+
+
                   if(size == 0) {
                     ParseError(line_number);
                   }
@@ -430,7 +459,12 @@ namespace maestro {
                     }
                   }
                   else {
-                    map_size = std::atoi(tkn.c_str());
+                    if(constant_map->find(tkn) == constant_map->end()) {
+                      map_size = std::atoi(tkn.c_str());
+                    }
+                    else {
+                      map_size = (*constant_map)[tkn];
+                    }
                   }
 
                   if(map_size <= 0) {
@@ -463,7 +497,12 @@ namespace maestro {
                     }
                   }
                   else {
-                    map_offset = std::atoi(tkn.c_str());
+                    if(constant_map->find(tkn) == constant_map->end()) {
+                      map_offset = std::atoi(tkn.c_str());
+                    }
+                    else {
+                      map_offset = (*constant_map)[tkn];
+                    }
                   }
 
                   if(map_offset <= 0) {
@@ -521,7 +560,12 @@ namespace maestro {
                     }
                   }
                   else {
-                    cluster_size = std::atoi(tkn.c_str());
+                    if(constant_map->find(tkn) == constant_map->end()) {
+                      cluster_size = std::atoi(tkn.c_str());
+                    }
+                    else {
+                      cluster_size = (*constant_map)[tkn];
+                    }
                   }
 
                   if(cluster_size <= 0) {

@@ -62,28 +62,30 @@ namespace maestro {
 
         }
 
+        CostAnalysisEngine (
+          std::shared_ptr<ConfigurationV2> configs,
+          std::shared_ptr<DFA::TensorTable> tensors,
+          std::shared_ptr<DFA::ClusterTable> clusters
+                             ) :
+          configs_(configs),
+          tensors_(tensors),
+          clusters_(clusters),
+          num_simd_lanes_(configs->target_accelerator_->GetVectorWidth()),
+          MAESTROClass("PerformanceAnalysis")
+        {
+
+        }
+
+
         void SetTargetCluster(std::shared_ptr<DFA::ClusterTable> clusters) {
           clusters_ = clusters;
         }
 
-        std::shared_ptr<std::vector<std::shared_ptr<CostAnalyisResults>>> AnalyzeEntireCluster(bool use_old_version = false) {
+        std::shared_ptr<std::vector<std::shared_ptr<CostAnalyisResults>>> AnalyzeEntireCluster(bool write_log_file = false) {
 
           std::shared_ptr<std::vector<std::shared_ptr<CostAnalyisResults>>> ret = std::make_shared<std::vector<std::shared_ptr<CostAnalyisResults>>>();
 
-          if(!use_old_version) {
-            AnalyzeClusterLevel_V2(0, clusters_->size(), clusters_->GetCluster(0)->GetDimensions(), ret, 0, true, true);
-          }
-          else {
-            for(int cluster_idx = clusters_->size() -1; cluster_idx >= 0 ; cluster_idx --) {
-              std::shared_ptr<CostAnalyisResults> prev_results = nullptr;
-              std::shared_ptr<CostAnalyisResults> curr_results = nullptr;
-
-              int prev_delay = ((prev_results) == nullptr)? 0 : prev_results->GetRuntime();
-                curr_results = AnalyzeSingleCluster(cluster_idx, prev_delay);
-              ret->push_back(curr_results);
-              prev_results = curr_results;
-            }
-          }
+          AnalyzeClusterLevel_V2(0, clusters_->size(), clusters_->GetCluster(0)->GetDimensions(), ret, 0, true, write_log_file);
 
           return ret;
         }
@@ -95,7 +97,8 @@ namespace maestro {
             std::shared_ptr<std::vector<std::shared_ptr<CostAnalyisResults>>> ret,
             int print_cluster_lv = 0,
             bool do_double_buffering = true,
-            bool print_log_file = false) {
+            bool write_log_file = false) {
+
           /* Base information */
           std::shared_ptr<DFA::ClusterUnit> target_cluster = clusters_->GetCluster(cluster_idx);
           int num_sub_clusters = target_cluster->GetNumClusters(false);
@@ -109,7 +112,7 @@ namespace maestro {
 
           std::ofstream log_file;
 
-          if(print_log_file && cluster_idx <= print_cluster_lv) {
+          if(write_log_file && cluster_idx <= print_cluster_lv) {
             log_file.open("log.txt",std::fstream::in | std::fstream::out | std::fstream::app);
             log_file << "=======================" << std::endl;
             log_file << "Log for cluster level " << cluster_idx << std::endl;
@@ -125,7 +128,7 @@ namespace maestro {
           }
 
           /* Intermediate analysis */
-          auto reuse_analysis = std::make_shared<CA::ReuseAnalysis>(target_cluster);
+          auto reuse_analysis = std::make_shared<CA::ReuseAnalysis>(target_cluster, write_log_file);
           auto results = std::make_shared<CostAnalyisResults>(clusters_->GetLayerType(), cluster_idx);
           results->UpdateNumSubClusters(target_cluster->GetNumClusters());
 
@@ -145,15 +148,19 @@ namespace maestro {
 
           //Set the buffer size based on the worst case
           // TODO: Apply case-based analysis
-          UpdateBufferSizeReq(results, dimensions, reuse_analysis, do_double_buffering);
+//          UpdateBufferSizeReq(results, dimensions, reuse_analysis, do_double_buffering);
 
           long num_total_cases = 0;
           int case_id = 0;
           for(auto& iteration_case : *all_iteration_cases) {
+            if(case_id == 0) {
+              UpdateBufferSizeReq(results, dimensions, reuse_analysis, iteration_case, cluster_idx, num_cluster_lvs, do_double_buffering);
+            }
+
             long num_case_occurrences = iteration_case->GetNumOccurrences();
             assert(num_case_occurrences > 0);
 
-            if(print_log_file && cluster_idx <= print_cluster_lv) {
+            if(write_log_file && cluster_idx <= print_cluster_lv) {
               log_file << "======================= CASE " << case_id << " =======================" << std::endl;
               log_file << "@ cluster level " << cluster_idx << std::endl;
               log_file << iteration_case->ToString() << std::endl;
@@ -170,7 +177,7 @@ namespace maestro {
               tensor_spatial_partial_sum_mapping_size += reuse_analysis->GetOutputTensorSpatialMappingSize(tensor, iteration_case, true);
               auto data_class = tensor->GetDataClass();
 
-              if(print_log_file && cluster_idx <= print_cluster_lv) {
+              if(write_log_file && cluster_idx <= print_cluster_lv) {
                 log_file << "Output Tensor " << tensor->GetTensorName() << std::endl;
                 log_file << "\tegress_traffic " << tensor_egress_traffic << std::endl;
                 log_file << "\tspatial_mapping_size" << tensor_spatial_mapping_size << std::endl;
@@ -193,8 +200,8 @@ namespace maestro {
               num_partial_sums += reuse_analysis->GetNumCriticalPathPartialSums(tensor, iteration_case);
             }
 
-            if(num_partial_sums == 0) {
-              if(print_log_file && cluster_idx <= print_cluster_lv) {
+            if(num_partial_sums <= 0) {
+              if(write_log_file && cluster_idx <= print_cluster_lv) {
                 log_file << "Skipping Invalid case" << std::endl;
               }
               continue;
@@ -206,7 +213,7 @@ namespace maestro {
               long tensor_spatial_mapping_size = reuse_analysis->GetInputTensorSpatialMappingSize(tensor, iteration_case);
               auto data_class = tensor->GetDataClass();
 
-              if(print_log_file && cluster_idx <= print_cluster_lv) {
+              if(write_log_file && cluster_idx <= print_cluster_lv) {
                 log_file << "Input Tensor " << tensor->GetTensorName() << std::endl;
                 log_file << "\tingress_traffic " << tensor_ingress_traffic << std::endl;
                 log_file << "\tspatial_mapping_size " << tensor_spatial_mapping_size << std::endl;
@@ -233,7 +240,7 @@ namespace maestro {
 
             //TODO: Exactly model cross-PE accumulation
 
-            if(print_log_file && cluster_idx <= print_cluster_lv) {
+            if(write_log_file && cluster_idx <= print_cluster_lv) {
               log_file << "Overall ingress_spatial_traffic: " << ingress_spatial_traffic << std::endl;
               log_file << "Overall egress_spatial_traffic: " << egress_spatial_traffic << std::endl;
               log_file << "Number of MACs over sub cluster array: " << tensor_spatial_partial_sum_mapping_size << std::endl;
@@ -265,19 +272,20 @@ namespace maestro {
             else {
               num_active_clusters = num_sub_clusters;
             }
+
             // Recursively process subclusters
             if(cluster_idx < num_cluster_lvs-1) {
               if(spmap_dim_iter_state->IsEdge()) {
                 if(spmap_dim_iter_state->HasSpEdgeEdge()) {
                   auto subclsuter_dim_under_sp_edge_edge = reuse_analysis->ConstructSubClusterDimension(iteration_case, true);
-                  AnalyzeClusterLevel_V2(cluster_idx+1, num_cluster_lvs, subclsuter_dim_under_sp_edge_edge, ret, print_cluster_lv, do_double_buffering, print_log_file);
+                  AnalyzeClusterLevel_V2(cluster_idx+1, num_cluster_lvs, subclsuter_dim_under_sp_edge_edge, ret, print_cluster_lv, do_double_buffering, write_log_file);
                   auto sp_edge_edge_subcluster_res = ret->at(ret->size()-1);
                   sub_cluster_results->push_back(sp_edge_edge_subcluster_res);
 
                   int num_rem_clusters = num_edge_clusters-1;
                   if(num_rem_clusters > 0 ) {
                     auto this_subclsuter_dim = reuse_analysis->ConstructSubClusterDimension(iteration_case, false);
-                    AnalyzeClusterLevel_V2(cluster_idx+1, num_cluster_lvs, this_subclsuter_dim, ret, print_cluster_lv,do_double_buffering, print_log_file);
+                    AnalyzeClusterLevel_V2(cluster_idx+1, num_cluster_lvs, this_subclsuter_dim, ret, print_cluster_lv,do_double_buffering, write_log_file);
                     auto this_subcluster_res = ret->at(ret->size()-1);
                     this_subcluster_res->SetNumSpatialOccurrences(num_rem_clusters);
                     sub_cluster_results->push_back(this_subcluster_res);
@@ -285,7 +293,7 @@ namespace maestro {
                 } // End of if(spmap_dim_iter_state->HasSpEdgeEdge())
                 else {
                   auto this_subclsuter_dim = reuse_analysis->ConstructSubClusterDimension(iteration_case, false);
-                  AnalyzeClusterLevel_V2(cluster_idx+1, num_cluster_lvs, this_subclsuter_dim, ret, print_cluster_lv, do_double_buffering, print_log_file);
+                  AnalyzeClusterLevel_V2(cluster_idx+1, num_cluster_lvs, this_subclsuter_dim, ret, print_cluster_lv, do_double_buffering, write_log_file);
                   auto this_subcluster_res = ret->at(ret->size()-1);
                   this_subcluster_res->SetNumSpatialOccurrences(num_edge_clusters);
                   sub_cluster_results->push_back(this_subcluster_res);
@@ -293,7 +301,7 @@ namespace maestro {
               } // End of if(spmap_dim_iter_state->IsEdge())
               else {
                 auto this_subclsuter_dim = reuse_analysis->ConstructSubClusterDimension(iteration_case, false);
-                AnalyzeClusterLevel_V2(cluster_idx+1, num_cluster_lvs, this_subclsuter_dim, ret, print_cluster_lv, do_double_buffering, print_log_file);
+                AnalyzeClusterLevel_V2(cluster_idx+1, num_cluster_lvs, this_subclsuter_dim, ret, print_cluster_lv, do_double_buffering, write_log_file);
                 auto this_subcluster_res = ret->at(ret->size()-1);
                 this_subcluster_res->SetNumSpatialOccurrences(num_sub_clusters);
                 sub_cluster_results->push_back(this_subcluster_res);
@@ -308,6 +316,7 @@ namespace maestro {
             else { // Base cluster
               computation_delay =static_cast<long>(
                   std::ceil(static_cast<double>(num_partial_sums) / static_cast<double>(num_simd_lanes_)));
+              if(computation_delay == 0) computation_delay = 1;
             }
             ////////////////////////////
 
@@ -325,15 +334,17 @@ namespace maestro {
             results->UpdateRuntime(results->GetRuntime(CA::EstimationType::Exact) + num_case_occurrences * outstanding_delay, CA::EstimationType::Exact);
             results->UpdateNumComputations(results->GetNumComputations() + num_case_occurrences * tensor_spatial_partial_sum_mapping_size);
 
-            double num_active_unit_clusters = 0;
+
+            long double num_active_unit_clusters = 0;
             for(auto& sub_res : * sub_cluster_results) {
               num_active_unit_clusters += sub_res->GetNumAvgActiveClusters() * sub_res->GetNumSpatialOccurrences();
             }
 
             num_active_unit_clusters = (num_active_unit_clusters== 0)? num_active_clusters : num_active_unit_clusters;
-
             results->SetNumAvgActiveClusters(results->GetNumAvgActiveClusters() + num_active_unit_clusters * num_case_occurrences);
-
+            //TODO: Doble check
+            if(computation_delay == 0)
+              computation_delay = 1;
             peak_noc_bw_req = std::max(peak_noc_bw_req, std::max(ingress_spatial_traffic, egress_spatial_traffic)/computation_delay);
             avg_noc_bw_req += (num_case_occurrences * std::max(ingress_spatial_traffic, egress_spatial_traffic))/computation_delay;
 
@@ -359,7 +370,7 @@ namespace maestro {
             num_total_cases += num_case_occurrences;
             case_id++;
 
-            if(print_log_file && cluster_idx <= print_cluster_lv) {
+            if(write_log_file && cluster_idx <= print_cluster_lv) {
               if(iteration_case->isAllInit()) {
                 log_file << "Note: Initialization case; cannot exploit latency hiding in this case" << std::endl;
               }
@@ -396,7 +407,9 @@ namespace maestro {
           } // End of for_each (iteration_case) in (all_iteration_cases)
           avg_noc_bw_req = avg_noc_bw_req / num_total_cases;
 
-          results->SetNumAvgActiveClusters(results->GetNumAvgActiveClusters() / num_total_cases);
+          if(num_total_cases != 0) {
+            results->SetNumAvgActiveClusters(results->GetNumAvgActiveClusters() / num_total_cases);
+          }
           results->UpdatePeakBWReq(peak_noc_bw_req);
           results->UpdateAvgBWReq(avg_noc_bw_req);
 
@@ -453,7 +466,7 @@ namespace maestro {
 
           std::shared_ptr<std::vector<IterationStatus>> iter_status = std::make_shared<std::vector<IterationStatus>>();
 
-          UpdateBufferSizeReq(results, dimensions, reuse_analysis, do_double_buffering);
+//          UpdateBufferSizeReq(results, dimensions, reuse_analysis, do_double_buffering);
 
           /* Main loop */
           for(int iter_status_case_num = 0; iter_status_case_num < num_cases; iter_status_case_num++) {
@@ -685,6 +698,7 @@ namespace maestro {
         }
 
       protected:
+        std::shared_ptr<ConfigurationV2> configs_;
         std::shared_ptr<DFA::TensorTable> tensors_;
         std::shared_ptr<DFA::ClusterTable> clusters_;
         int num_simd_lanes_;
@@ -695,51 +709,72 @@ namespace maestro {
             std::shared_ptr<CostAnalyisResults> results,
             std::shared_ptr<DFA::DimensionTable> dimensions,
             std::shared_ptr<CA::ReuseAnalysis> reuse_analysis,
+            std::shared_ptr<DFA::IterationStatus> iter_status,
+            int cluster_idx,
+            int num_cluster_lvs,
             bool do_double_buffering)
         {
           auto output_tensors = tensors_->GetTensorsInClass(DFA::TensorClass::OutputTensor);
-          auto input_tensors = tensors_->GetTensorsInClass(DFA::TensorClass::InputTensor);
+           auto input_tensors = tensors_->GetTensorsInClass(DFA::TensorClass::InputTensor);
 
-          int buffer_size_mult = do_double_buffering? 2 : 1;
+           int buffer_size_mult = do_double_buffering? 2 : 1;
 
-          for(auto& tensor : *input_tensors) {
-            auto dataclass = tensor->GetDataClass();
-            auto coupled_vars = tensor->GetCoupledVariables();
-            long size = 1;
+           for(auto& tensor : *input_tensors) {
+             auto dataclass = tensor->GetDataClass();
+             auto coupled_vars = tensor->GetCoupledVariables();
+             long size = 1;
 
-            for(auto& dim : *coupled_vars) {
-              size *= dimensions->GetSize(dim);
-            }
+             for(auto& dim : *coupled_vars) {
+               size *= dimensions->GetSize(dim);
+             }
 
-            results->UpdateBufferAccessCount(BufferType::Upstream, BufferAccessType::Write, size, dataclass);
+             auto upstream_buffer_req = reuse_analysis->GetSpatialIngressTraffic(tensor, iter_status);
+             auto prev_upstream_buffer_req = results->GetBufferSizeReq(BufferType::Upstream,tensor->GetDataClass());
 
-            auto downstream_buffer_req = reuse_analysis->GetMappedVolume(tensor);
-            results->UpdateBufferSizeReq(BufferType::Downstream, buffer_size_mult * downstream_buffer_req, dataclass);
-          }
+             results->UpdateBufferSizeReq(BufferType::Upstream,prev_upstream_buffer_req + upstream_buffer_req * buffer_size_mult, dataclass);
 
-          for(auto& tensor : *output_tensors) {
-            auto dataclass = tensor->GetDataClass();
-            auto coupled_vars = tensor->GetCoupledVariables();
-            long size = 1;
+             results->UpdateBufferAccessCount(BufferType::Upstream, BufferAccessType::Write, size, dataclass);
 
-            for(auto& dim : *coupled_vars) {
-              if(dimensions->IsOverlapped(dim)) {
-                auto overlapping_dim = dimensions->GetOverlappingDim(dim);
-                int sliding_dim_size = dimensions->GetSize(overlapping_dim);
-                int reference_dim_size = dimensions->GetSize(dim);;
-                int actual_reference_dim_size = reference_dim_size;
-                size *= reference_dim_size - sliding_dim_size + 1;
-              }
-              else {
-                size *= dimensions->GetSize(dim);
-              }
-            }
+             auto downstream_buffer_req = reuse_analysis->GetMappedVolume(tensor);
+             auto prev_downstream_buffer_req = results->GetBufferSizeReq(BufferType::Downstream, tensor->GetDataClass());
+             results->UpdateBufferSizeReq(BufferType::Downstream, prev_downstream_buffer_req + buffer_size_mult * downstream_buffer_req, dataclass);
 
-            results->UpdateBufferAccessCount(BufferType::Upstream, BufferAccessType::Read, size, dataclass);
+           }
 
-            auto downstream_buffer_req = reuse_analysis->GetMappedVolume(tensor);
-            results->UpdateBufferSizeReq(BufferType::Downstream, buffer_size_mult * downstream_buffer_req, dataclass);
-          }
+           for(auto& tensor : *output_tensors) {
+             auto dataclass = tensor->GetDataClass();
+             auto coupled_vars = tensor->GetCoupledVariables();
+             long size = 1;
+
+             for(auto& dim : *coupled_vars) {
+               if(dimensions->IsOverlapped(dim)) {
+                 auto overlapping_dim = dimensions->GetOverlappingDim(dim);
+                 int sliding_dim_size = dimensions->GetSize(overlapping_dim);
+                 int reference_dim_size = dimensions->GetSize(dim);;
+                 int actual_reference_dim_size = reference_dim_size;
+                 size *= reference_dim_size - sliding_dim_size + 1;
+               }
+               else {
+                 size *= dimensions->GetSize(dim);
+               }
+             }
+
+             auto upstream_buffer_req = reuse_analysis->GetSpatialEgressTraffic(tensor, iter_status);
+             results->UpdateBufferSizeReq(BufferType::Upstream, buffer_size_mult * upstream_buffer_req, dataclass);
+             if(cluster_idx == 0 && buffer_size_mult * upstream_buffer_req > configs_->l2_size_) {
+               error_handler_->PrintErrorMsg(TL::ErrorCode::NotEnoughL2Buffer,std::to_string(buffer_size_mult * upstream_buffer_req), this->GetName());
+               error_handler_->TerminateProgram();
+             }
+
+             results->UpdateBufferAccessCount(BufferType::Upstream, BufferAccessType::Read, size, dataclass);
+
+             auto downstream_buffer_req = reuse_analysis->GetMappedVolume(tensor);
+             results->UpdateBufferSizeReq(BufferType::Downstream, buffer_size_mult * downstream_buffer_req, dataclass);
+             if(cluster_idx == num_cluster_lvs -1 && buffer_size_mult * downstream_buffer_req > configs_->l1_size_) {
+               error_handler_->PrintErrorMsg(TL::ErrorCode::NotEnoughL1Buffer,std::to_string(buffer_size_mult * downstream_buffer_req), this->GetName());
+               error_handler_->TerminateProgram();
+             }
+           }
         }
 
         void UpdateArithmeticIntensity(

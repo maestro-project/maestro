@@ -47,9 +47,10 @@ namespace  maestro {
 
     class ReuseAnalysis : public MAESTROClass {
       public:
-        ReuseAnalysis (std::shared_ptr<DFA::ClusterUnit> target_cluster) :
+        ReuseAnalysis (std::shared_ptr<DFA::ClusterUnit> target_cluster, bool write_log_file = false) :
           MAESTROClass("Reuse Analysis"),
-          target_cluster_(target_cluster) {
+          target_cluster_(target_cluster),
+          write_log_file_(write_log_file) {
           num_mapped_elements_ = std::make_unique<std::map<std::string, int>>();
           num_mapped_elements_edge_ = std::make_unique<std::map<std::string, int>>();
 
@@ -489,19 +490,23 @@ namespace  maestro {
           }
 
           std::ofstream log_file;
-          log_file.open("log.txt",std::fstream::in | std::fstream::out | std::fstream::app);
 
+          if(write_log_file_) {
+            log_file.open("log.txt",std::fstream::in | std::fstream::out | std::fstream::app);
+          }
 
           if(!is_sp_mapped) {
-            log_file << "Input tensor <" << input_tensor->GetTensorName() << " is not sp-mapped " << std::endl;
+            if(write_log_file_) {
+              log_file << "Input tensor <" << input_tensor->GetTensorName() << " is not sp-mapped " << std::endl;
+            }
             ret = GetPEIngressVolume(input_tensor, iter_status);
           }
           else {
             int num_clusters = target_cluster_->GetNumClusters(false);
             int num_edge_clusters = target_cluster_->GetNumClusters(true);
-
-            log_file << "Input tensor <" << input_tensor->GetTensorName() << " is sp-mapped. num clusters =  " << num_clusters << ", num edge clusters = " << num_edge_clusters << std::endl;
-
+            if(write_log_file_) {
+              log_file << "Input tensor <" << input_tensor->GetTensorName() << " is sp-mapped. num clusters =  " << num_clusters << ", num edge clusters = " << num_edge_clusters << std::endl;
+            }
 
             if(!is_sp_edge) {
               ret = GetPEIngressVolume(input_tensor, iter_status, true, false);
@@ -520,15 +525,19 @@ namespace  maestro {
                 int num_full_spmap_clusters = num_edge_clusters - num_sp_edge_edge_cluster -1 ; //-1: Init
                 num_full_spmap_clusters = std::max(num_full_spmap_clusters, 0);
 
-                log_file << "num_sp_edge_edge_cluster: " << num_sp_edge_edge_cluster << std::endl;
-                log_file << "num_full_spmap_clusters: " << num_full_spmap_clusters << std::endl;
+                if(write_log_file_) {
+                  log_file << "num_sp_edge_edge_cluster: " << num_sp_edge_edge_cluster << std::endl;
+                  log_file << "num_full_spmap_clusters: " << num_full_spmap_clusters << std::endl;
+                }
 
                 ret += num_full_spmap_clusters * GetPEIngressVolume(input_tensor, iter_status, false, false);
-                log_file << "full sp map clusters, subcluster load volume : " << GetPEIngressVolume(input_tensor, iter_status, false, false) << std::endl;
-
+                if(write_log_file_) {
+                  log_file << "full sp map clusters, subcluster load volume : " << GetPEIngressVolume(input_tensor, iter_status, false, false) << std::endl;
+                }
                 ret += num_sp_edge_edge_cluster * GetPEIngressVolume(input_tensor, iter_status, false, true);
-                log_file << "sp_edge_edge sp map clusters, subcluster load volume : " << GetPEIngressVolume(input_tensor, iter_status, false, true) << std::endl;
-
+                if(write_log_file_) {
+                  log_file << "sp_edge_edge sp map clusters, subcluster load volume : " << GetPEIngressVolume(input_tensor, iter_status, false, true) << std::endl;
+                }
               }
             }
           }
@@ -1248,6 +1257,7 @@ namespace  maestro {
         }
 
       protected:
+        bool write_log_file_ = false;
         std::shared_ptr<DFA::ClusterUnit> target_cluster_;
 
         std::unique_ptr<std::map<std::string, int>> num_mapped_elements_;

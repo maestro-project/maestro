@@ -91,7 +91,9 @@ namespace maestro {
         noc_latency_(noc_latency),
         noc_bw_(noc_bw),
         num_pes_(num_pes),
-        simd_width_(simd_width) {
+        simd_width_(simd_width),
+        l1_size_(l1_sram_byte_size),
+        l2_size_(l2_sram_byte_size) {
         network_= std::make_shared<DFA::NeuralNetwork>();
         tensors_ = std::make_shared<std::vector<std::shared_ptr<DFA::TensorTable>>>();
         nocs_ = std::make_shared<std::vector<std::shared_ptr<abstract_hw::NetworkOnChipModel>>>();
@@ -118,6 +120,8 @@ namespace maestro {
 
       int num_pes_;
       int simd_width_;
+      int l1_size_;
+      int l2_size_;
   }; // End of class Configuration
 
 

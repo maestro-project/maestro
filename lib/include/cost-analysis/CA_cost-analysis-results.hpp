@@ -57,6 +57,8 @@ namespace maestro {
           compute_delay_[static_cast<int>(ValueType::Max)] = 0;
           compute_delay_[static_cast<int>(ValueType::Min)] = std::numeric_limits<int>::max();
           compute_delay_[static_cast<int>(ValueType::Avg)] = 0;
+
+          avg_num_active_unit_clusters_ = 0;
         }
 
 
@@ -78,6 +80,8 @@ namespace maestro {
           compute_delay_[static_cast<int>(ValueType::Max)] = 0;
           compute_delay_[static_cast<int>(ValueType::Min)] = std::numeric_limits<int>::max();
           compute_delay_[static_cast<int>(ValueType::Avg)] = 0;
+
+          avg_num_active_unit_clusters_ = 0;
         }
 
         long GetRuntime(CA::EstimationType estimation_type = CA::EstimationType::Exact) {

@@ -41,6 +41,9 @@ namespace maestro {
       int hops = 1;
       int hop_latency = 1;
       bool mc = true;
+      bool top_bw_only = false;
+      bool bw_sweep = false;
+
       bool full_buffer = false;
       std::list<std::string> in_tensors = {"weight", "input"};
       std::list<std::string> out_tensors = {"output"};
@@ -56,8 +59,8 @@ namespace maestro {
 
       bool do_dse = true;
       bool do_print_ds = false;
-      int l1_size = 16;
-      int l2_size = 256;
+      int l1_size = 1024;
+      int l2_size = 16384;
       int min_num_pes = 1024;
       int min_noc_bw = 512;
       int max_num_pes = 1024;
@@ -68,6 +71,8 @@ namespace maestro {
       bool verbose = false;
       bool print_design_space_to_file = false;
       bool print_res_to_screen = true;
+      bool print_res_to_csv_file = true;
+      bool print_log_file = false;
       int message_print_lv = 0;
       int pe_tick = 4;
       int bw_tick = 4;
@@ -81,6 +86,8 @@ namespace maestro {
           desc.add_options()
               ("help", "Display help message")
               ("print_res", po::value<bool>(&print_res_to_screen) ,"Print the eval results to screen")
+              ("print_res_csv_file", po::value<bool>(&print_res_to_csv_file) ,"Print the eval results to screen")
+              ("print_log_file", po::value<bool>(&print_log_file) ,"Print detailed logs to a file")
               ("msg_print_lv", po::value<int>(&message_print_lv) ,"the name of dataflow description file")
           ;
 
@@ -97,6 +104,8 @@ namespace maestro {
             ("noc_hops", po::value<int>(&hops), "the average number of NoC hops")
             ("noc_hop_latency", po::value<int>(&hop_latency), "the latency for each of NoC hop")
             ("noc_mc_support", po::value<bool>(&mc), "the multicasting capability of NoC")
+            ("top_bw_only", po::value<bool>(&top_bw_only), "Only constraint top bandwidth")
+            ("bw_sweep", po::value<bool>(&bw_sweep), "Sweep the NoC bandwidth")
           ;
 
           po::options_description pe_array("Processing element options");

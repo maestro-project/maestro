@@ -44,6 +44,8 @@ namespace maestro {
 				InvalidDimension,
 				InvalidAnalysisCase,
 				EdgeOnSpatialMap,
+				NotEnoughL2Buffer,
+				NotEnoughL1Buffer,
 				MultiParallelismInSingleCluster,
 				MissingNoCForCluster,
 				NotSupportedLayerType
@@ -112,6 +114,17 @@ namespace maestro {
               std::cout << "(Error@ " << instance_name << ") Dataflow cannot have edge on spatial map. Please check the mapping size of spatial map at cluter level " << opt << "." <<  std::endl;
               break;
             }
+
+            case ErrorCode::NotEnoughL1Buffer: {
+              std::cout << "(Error@ " << instance_name << ") The required L1 buffer size " << opt << " is larger than your L1 size. Reduce the L1 tile size by reducing mapping sizes." << std::endl;
+              break;
+            }
+
+            case ErrorCode::NotEnoughL2Buffer: {
+              std::cout << "(Error@ " << instance_name << ") The required L2 buffer size " << opt << " is larger than your L2 size. Reduce the L2 tile size by reducing mapping sizes." << std::endl;
+              break;
+            }
+
 
             case ErrorCode::MultiParallelismInSingleCluster: {
               std::cout << "(Error@ " << instance_name << ") Found too many spatial maps within a single cluster. Cluster level: " << opt << "." <<  std::endl;

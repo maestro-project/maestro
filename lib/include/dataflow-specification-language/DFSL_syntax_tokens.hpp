@@ -39,6 +39,9 @@ namespace maestro {
     const std::string separator_ = ";";
     const std::string comments_ = "//";
 
+    /* Constant definition */
+    const std::string constant_decl_ = "Constant";
+
 		/* Neural network and layer Description */
 		const std::string network_decl_ = "Network";
 		const std::string layer_decl_ = "Layer";

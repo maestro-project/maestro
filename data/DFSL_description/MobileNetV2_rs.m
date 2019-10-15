@@ -7,7 +7,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -29,7 +29,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -45,7 +45,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 32, R: 3, S: 3, Y:112, X:112 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -62,7 +62,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -78,7 +78,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 16, R: 1, S: 1, Y:112, X:112 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -97,7 +97,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -113,7 +113,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 96, R: 3, S: 3, Y:112, X:112 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -130,7 +130,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -147,7 +147,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -163,7 +163,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 96, R: 3, S: 3, Y:56, X:56 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -180,7 +180,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -201,7 +201,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -217,7 +217,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 144, R: 3, S: 3, Y:56, X:56 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -234,7 +234,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -253,7 +253,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -269,7 +269,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 144, R: 3, S: 3, Y:28, X:28 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -286,7 +286,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -303,7 +303,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 144, R: 1, S: 1, Y:28, X:28 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -321,7 +321,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -337,7 +337,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 144, R: 3, S: 3, Y:28, X:28 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -354,7 +354,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -375,7 +375,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -391,7 +391,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 192, R: 3, S: 3, Y: 28, X: 28 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -408,7 +408,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -427,7 +427,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -443,7 +443,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 192, R: 3, S: 3, Y: 14, X: 14 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -460,7 +460,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -476,7 +476,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 192, R: 1, S: 1, Y: 14, X: 14 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -494,7 +494,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -510,7 +510,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 192, R: 3, S: 3, Y: 14, X: 14 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -527,7 +527,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -543,7 +543,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 192, R: 1, S: 1, Y: 14, X: 14 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -561,7 +561,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -577,7 +577,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 192, R: 3, S: 3, Y: 14, X: 14 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -594,7 +594,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -614,7 +614,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -630,7 +630,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 384, R: 3, S: 3, Y: 14, X: 14 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -647,7 +647,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -665,7 +665,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -681,7 +681,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 384, R: 3, S: 3, Y: 14, X: 14 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -698,7 +698,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -717,7 +717,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -733,7 +733,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 576, R: 3, S: 3, Y: 14, X: 14 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -750,7 +750,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -769,7 +769,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -785,7 +785,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 576, R: 3, S: 3, Y: 7, X: 7 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -802,7 +802,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -819,7 +819,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 576 R: 1, S: 1, Y: 7, X: 7 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -837,7 +837,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -853,7 +853,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 576, R: 3, S: 3, Y: 7, X: 7 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -870,7 +870,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -889,7 +889,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -905,7 +905,7 @@ Network MobileNetV2 {
 		Dimensions { K: 1, C: 960, R: 3, S: 3, Y: 7, X: 7 }
 		Dataflow {
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -922,7 +922,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -942,7 +942,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
@@ -960,7 +960,7 @@ Network MobileNetV2 {
 		Dataflow {
 			TemporalMap(2,2) K;
 			TemporalMap(2,2) C;
-			TemporalMap(3,3) R;
+			TemporalMap(Sz(R),Sz(R)) R;
 			SpatialMap(Sz(R),1) Y;
 			TemporalMap(Sz(S),1) X;
 			Cluster(3,P);
