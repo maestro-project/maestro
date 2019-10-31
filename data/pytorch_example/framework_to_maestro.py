@@ -1,10 +1,3 @@
-#import tensorflow as tf
-
-import torch
-import torchvision.models as models
-
-from keras_helper import get_model
-from maestro_summary import summary
 import re
 import argparse
 from argparse import RawTextHelpFormatter
@@ -19,7 +12,7 @@ if __name__ == "__main__":
     parser.add_argument('--model', type=str, default="mobilenet_v2",
     help='model from torchvision choices: \n'
          'resnet18, alexnet, vgg16, squeezenet, densenet, \n'
-         'inception_v3, googlenet, shufflenet, mobilenet,\n'
+         'inception_v3, googlenet, shufflenet, \n'
          'mobilenet_v2, wide_resnet50_2, mnasnet,\n'
          '-----\n'
          'model from tensorflow.keras.applications choices: \n'
@@ -42,53 +35,23 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     INPUT_SIZE = tuple((int(d) for d in str.split(opt.input_size, ",")))
 
+    print('Begin processing')
+    print('API name: ' + str(opt.api_name))
+    print('Model name: ' + str(opt.model))
+    print('Input size: ' + str(INPUT_SIZE))
     if(opt.api_name =='keras'):
-        print('Using keras with input size: ' + str(INPUT_SIZE))
+        from keras_helper import get_model
+        from keras_maestro_summary import summary
+
         model = None
         if opt.model == 'custom':
             new_module = __import__(opt.custom)
             model = getattr(new_module, opt.custom)()
         else:
             model = get_model(opt.model, INPUT_SIZE[::-1])
-        #print(model.summary())
-        mae_summary = {}
-        for i in range(len(model.layers)):
-            cur_config = model.layers[i].get_config()
-            cur_config['type'] = model.layers[i].__class__.__name__
 
-            is_conv2d = cur_config['type'] == 'Conv2D'
-            is_dwconv2d = cur_config['type'] == 'DepthwiseConv2D'
-            is_dense = cur_config['type'] == 'Dense'
-
-            if is_conv2d:
-                cur_config['type'] = 'CONV'
-            if is_dwconv2d:
-                cur_config['type'] = 'DSCONV'
-
-            if(is_conv2d or is_dwconv2d or is_dense):
-                cur_ic = []
-                cur_ic.append(None)
-                if(is_conv2d):
-                    cur_ic.append(model.layers[i].output_shape[3])
-                elif(is_dwconv2d):
-                    cur_ic.append(1)
-                elif(is_dense):
-                    cur_ic.append(model.layers[i].output_shape[1])
-
-                if(is_dense):
-                    cur_ic.append(model.layers[i].input_shape[1])
-                    for _ in range(4):
-                        cur_ic.append(1)
-                else:
-                    cur_ic.append(model.layers[i].input_shape[3])
-                    cur_ic.append(model.layers[i].kernel_size[0])
-                    cur_ic.append(model.layers[i].kernel_size[1])
-                    cur_ic.append(model.layers[i].input_shape[1])
-                    cur_ic.append(model.layers[i].input_shape[2])
-
-                cur_config['dimension_ic'] = cur_ic
-            mae_summary[model.layers[i].get_config()['name']] = cur_config
-
+        mae_summary = summary(model)
+        
         with open(opt.dataflow + ".m", "r") as fd:
             with open("util/dpt.m", "r") as fdpt:
                 with open("out/"+opt.outfile, "w") as fo:
@@ -98,7 +61,6 @@ if __name__ == "__main__":
                         pd = re.compile("^DSCONV")
                         pf = re.compile("^Dense")
 
-                        #print(val['type'])
                         match_pc = pc.match(val['type'])
                         match_pd = pd.match(val['type'])
                         match_pf = pf.match(val['type'])
@@ -125,6 +87,10 @@ if __name__ == "__main__":
                     fo.write("}")
 
     if(opt.api_name == 'pytorch'):
+        import torch
+        import torchvision.models as models
+        from torch_maestro_summary import summary
+
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         model = getattr(models, opt.model)()
         model = model.to(device)
