@@ -46,37 +46,56 @@ Create a DFSL file under "data/DFSL_description" and point the file using --DFSL
 
 For syntax of the DFSL file, please refer to other DFSL files in data/DFSL_description.
 
-# How to convert Pytorch model to MAESTRO dataflow
-> cd data/pytorch_example
+# How to convert PyTorch/Keras model to MAESTRO dataflow
+> cd data/frontend_example
 
-Use [torchvision.models](https://pytorch.org/docs/stable/torchvision/models.html)
+Check the messages from the help.
+> python framework_to_maestro.py --help
+
+Supported models:
+
+<ul>
+  <li> PyTorch: [torchvision.models](https://pytorch.org/docs/stable/torchvision/models.html) </li>
+  <li> Keras: [tensorflow.keras.applications](https://www.tensorflow.org/api_docs/python/tf/keras/applications) 
+  
+  *tensorflow 2.0 should be installed.* </li>
+</ul>
+
 ## Run with default setting
-> python torch_to_maestro.py
+> python framework_to_maestro.py
+
 ## Run MAESTRO with the converted dataflow file
 Change the contents of "run.sh"
 
---DFSL_file='data/pytorch_example/out/out.m'
+--DFSL_file='data/frontend_example/out/out.m'
 
 Run MAESTRO
 
 > ./run.sh
+
 ### Change the input arguement
-> python torch_to_maestro.py --input_size 3,224,224 --model mobilenet_v2 --dataflow os --outfile out.m 
+> python framework_to_maestro.py --api_name pytorch --input_size 3,224,224 --model mobilenet_v2 --dataflow os --outfile out.m 
+
+--api_name: the API name, choose from "pytorch, keras"
 
 --input_size: the input image size of the first layer
 
---model: the model name from torchvision.models
+--model: the model name from torchvision.models (or tensorflow.keras.applications)
+         TO use a custom model, enter custom for this argument.
+
+--custom: Enter the custom network python file name here. 
+          The file should have a function whose name is same as the file name and returns the model.
+          (This option is working only for keras now)
 
 --dataflow: the dataflow for each layer, choose from "os, ws, rs, dla"
 
 --outfile: the MAESTRO dataflow output file name
-
-
-
 
 # Contributors
 Hyoukjun Kwon (hyoukjun@gatech.edu): Main developer, developed core framework and functionalities
 
 Prasanth Chatarasi (cprasanth@gatech.edu): Improved APIs
 
-Felix (Sheng-Chun) Kao (felix@gatech.edu): Implemented Pytorch front-end
+Felix (Sheng-Chun) Kao (felix@gatech.edu): Implemented Pytorch frontend
+
+Geonhwa Jeong (geonhwa.jeong@gatech.edu): Implemented Keras frontend
