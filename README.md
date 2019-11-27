@@ -53,9 +53,12 @@ Check the messages from the help.
 > python framework_to_maestro.py --help
 
 Supported models:
-PyTorch: [torchvision.models](https://pytorch.org/docs/stable/torchvision/models.html)
-Keras: [tensorflow.keras.applications](https://www.tensorflow.org/api_docs/python/tf/keras/applications)
-    tensorflow 2.0 should be installed.
+
+<ul>
+  <li> PyTorch: [torchvision.models](https://pytorch.org/docs/stable/torchvision/models.html) </li>
+  <li> Keras: [tensorflow.keras.applications](https://www.tensorflow.org/api_docs/python/tf/keras/applications) 
+  tensorflow 2.0 should be installed. </li>
+</ul>
 
 ## Run with default setting
 > python framework_to_maestro.py
