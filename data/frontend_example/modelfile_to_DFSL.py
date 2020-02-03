@@ -1,5 +1,6 @@
 import re
 import argparse
+import os.path
 from argparse import RawTextHelpFormatter
 
 if __name__ == "__main__":
@@ -10,27 +11,30 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     print('Begin processing')
     dsconv = 0
-    with open(opt.dataflow + ".m" ,"r") as fd:
-        with open("util/dpt.m" , "r") as fdpt:
-            with open("out/" + opt.outfile, "w") as fo:
-                with open("out/" + opt.model_file + ".m", "r") as fm:
-                    for line in fm:
-                        if(re.search("DSCONV",line)):
-                            dsconv = 1
-                        write_pos = re.match("Dimensions" ,line)
-                        if(write_pos):
-                            fo.write(line)
-                            if(dsconv):
-                                fdpt.seek(0)
-                                fo.write(fdpt.read())
+    if os.path.exists("out/" + opt.model_file +".m"):
+        with open(opt.dataflow + ".m" ,"r") as fd:
+            with open("util/dpt.m" , "r") as fdpt:
+                with open("out/" + opt.outfile, "w") as fo:
+                    with open("out/" + opt.model_file + ".m", "r") as fm:
+                        for line in fm:
+                            if(re.search("DSCONV",line)):
+                                dsconv = 1
+                            write_pos = re.match("Dimensions" ,line)
+                            if(write_pos):
+                                fo.write(line)
+                                if(dsconv):
+                                    fdpt.seek(0)
+                                    fo.write(fdpt.read())
+                                else:
+                                    fd.seek(0)
+                                    fo.write(fd.read())
+                                dsconv=0
                             else:
-                                fd.seek(0)
-                                fo.write(fd.read())
-                            dsconv=0
-                        else:
-                            fo.write(line)
+                                fo.write(line)
 
-print("DFSL file created")
+        print("DFSL file created")
+    else:
+        print("Model file not found, please provide one")
 
                         
                     
