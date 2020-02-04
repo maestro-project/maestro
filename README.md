@@ -41,7 +41,7 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 
 --l2_size=512 : l2 buffer size
 
-# How to use generate input files for Maestro?
+# How to generate input files for Maestro?
 Read the [tutorial](https://github.com/ghjeong12/maestro-dev/blob/dev/docs/frontend_tutorial.md).
 
 # Contributors
