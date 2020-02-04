@@ -11,11 +11,12 @@ if __name__ == "__main__":
     opt = parser.parse_args()
     print('Begin processing')
     dsconv = 0
-    if os.path.exists("out/" + opt.model_file +".m"):
-        with open(opt.dataflow + ".m" ,"r") as fd:
-            with open("util/dpt.m" , "r") as fdpt:
-                with open("out/" + opt.outfile, "w") as fo:
-                    with open("out/" + opt.model_file + ".m", "r") as fm:
+    base_path = '../../data/'
+    if os.path.exists(base_path + 'model/' + opt.model_file +".m"):
+        with open(base_path + 'dataflow/' + opt.dataflow + ".m" ,"r") as fd:
+            with open(base_path + 'dataflow/dpt.m' , "r") as fdpt:
+                with open(base_path + 'mapping/' + opt.outfile, "w") as fo:
+                    with open(base_path + 'model/' + opt.model_file + ".m", "r") as fm:
                         for line in fm:
                             if(re.search("DSCONV",line)):
                                 dsconv = 1
@@ -36,5 +37,5 @@ if __name__ == "__main__":
     else:
         print("Model file not found, please provide one")
 
-                        
-                    
+
+

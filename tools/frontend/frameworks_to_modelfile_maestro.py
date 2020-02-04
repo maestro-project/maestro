@@ -26,7 +26,7 @@ if __name__ == "__main__":
     parser.add_argument('--custom', type=str, default="none",
     help='Enter the custom network python file name here.\n'
          'The file should have a function with same file name\n '
-         'which returns the model\n'
+         'which returns the model. Also put this file in keras_example\n'
          '(This option is working only for keras)\n')
 
 
@@ -36,28 +36,39 @@ if __name__ == "__main__":
 
     print('Begin processing')
     print('API name: ' + str(opt.api_name))
-    print('Model name: ' + str(opt.model))
+    if(opt.model == 'custom'):
+        print('Model name: ' + str(opt.custom))
+    else:
+        print('Model name: ' + str(opt.model))
     print('Input size: ' + str(INPUT_SIZE))
     if(opt.api_name =='keras'):
-        from keras_helper import get_model
-        from keras_maestro_summary import summary
+        from helpers.keras_helper import get_model
+        from helpers.keras_maestro_summary import summary
 
         model = None
         if opt.model == 'custom':
-            new_module = __import__(opt.custom)
+            print(opt.custom)
+            module_name = 'keras_example.' + opt.custom
+            new_module = __import__(module_name, fromlist=[opt.custom])
+
+            #new_module = __import__('keras_example')#module_name)
+            #new_module = new_module.import_module(opt.custom)
+            #print(new_module)
+            #new_module[opt.custom].function(opt.custom)
             model = getattr(new_module, opt.custom)()
+            #model = new_module.my_model()
         else:
             model = get_model(opt.model, INPUT_SIZE[::-1])
 
         mae_summary = summary(model)
-        
-        with open("out/"+opt.outfile, "w") as fo:
+
+        with open("../../data/model/"+opt.outfile, "w") as fo:
             fo.write("Network {} {{\n".format(model.name))
             for key, val in mae_summary.items():
                 pc = re.compile("^CONV")
                 pd = re.compile("^DSCONV")
                 pf = re.compile("^Dense")
-                
+
                 match_pc = pc.match(val['type'])
                 match_pd = pd.match(val['type'])
                 match_pf = pf.match(val['type'])
