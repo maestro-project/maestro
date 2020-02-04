@@ -48,15 +48,9 @@ if __name__ == "__main__":
         model = None
         if opt.model == 'custom':
             print(opt.custom)
-            module_name = 'keras_example.' + opt.custom
+            module_name = 'keras-example.' + opt.custom
             new_module = __import__(module_name, fromlist=[opt.custom])
-
-            #new_module = __import__('keras_example')#module_name)
-            #new_module = new_module.import_module(opt.custom)
-            #print(new_module)
-            #new_module[opt.custom].function(opt.custom)
             model = getattr(new_module, opt.custom)()
-            #model = new_module.my_model()
         else:
             model = get_model(opt.model, INPUT_SIZE[::-1])
 
