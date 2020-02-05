@@ -84,7 +84,7 @@ if __name__ == "__main__":
     if(opt.api_name == 'pytorch'):
         import torch
         import torchvision.models as models
-        from torch_maestro_summary import summary
+        from helpers.torch_maestro_summary import summary
 
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
         model = getattr(models, opt.model)()
