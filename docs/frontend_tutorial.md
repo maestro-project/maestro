@@ -46,6 +46,8 @@ Model: Mobilenet_v2
 
 ### Command used for setting the above arguments:
 >python frameworks_to_modelfile_maestro.py --api_name pytorch --input_size 3,224,224 --model mobilenet_v2 --outfile dnn_model.m 
+
+The file will be generated in data/model:
 ```
 Network torchvision.models.mobilenet {
 Layer Conv2d-1 {
@@ -105,6 +107,7 @@ Model: Mobilenet_v2
 ### Command used for setting the above arguments:
 >python frameworks_to_modelfile_maestro.py --api_name keras --input_size 3,224,224 --model mobilenet_v2 --outfile dnn_model.m 
 
+The file will be generated in data/model
 ```
 Network mobilenetv2_1.00_224 {
 Layer block_16_expand {
@@ -226,6 +229,7 @@ Dataflow: Output Stationary
 ### Command used for setting the above arguments:
 > python modelfile_to_mapping.py --model_file dnn_model --dataflow os --outfile out.m 
 
+The file will be generated in data/mapping:
 ```
 Network mobilenetv2_1.00_224 {
 Layer block_16_expand {
