@@ -41,55 +41,8 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 
 --l2_size=512 : l2 buffer size
 
-# How to change the DNN model and dataflow
-Create a DFSL file under "data/DFSL_description" and point the file using --DFSL_file parameter in "run.sh"
-
-For syntax of the DFSL file, please refer to other DFSL files in data/DFSL_description.
-
-# How to convert PyTorch/Keras model to MAESTRO dataflow
-> cd data/frontend_example
-
-Check the messages from the help.
-> python framework_to_maestro.py --help
-
-Supported models:
-
-<ul>
-  <li> PyTorch: [torchvision.models](https://pytorch.org/docs/stable/torchvision/models.html) </li>
-  <li> Keras: [tensorflow.keras.applications](https://www.tensorflow.org/api_docs/python/tf/keras/applications) 
-  
-  *tensorflow 2.0 should be installed.* </li>
-</ul>
-
-## Run with default setting
-> python framework_to_maestro.py
-
-## Run MAESTRO with the converted dataflow file
-Change the contents of "run.sh"
-
---DFSL_file='data/frontend_example/out/out.m'
-
-Run MAESTRO
-
-> ./run.sh
-
-### Change the input arguement
-> python framework_to_maestro.py --api_name pytorch --input_size 3,224,224 --model mobilenet_v2 --dataflow os --outfile out.m 
-
---api_name: the API name, choose from "pytorch, keras"
-
---input_size: the input image size of the first layer
-
---model: the model name from torchvision.models (or tensorflow.keras.applications)
-         TO use a custom model, enter custom for this argument.
-
---custom: Enter the custom network python file name here. 
-          The file should have a function whose name is same as the file name and returns the model.
-          (This option is working only for keras now)
-
---dataflow: the dataflow for each layer, choose from "os, ws, rs, dla"
-
---outfile: the MAESTRO dataflow output file name
+# How to generate input files for Maestro?
+Read the [tutorial](https://github.com/ghjeong12/maestro-dev/blob/dev/docs/frontend_tutorial.md).
 
 # Contributors
 Hyoukjun Kwon (hyoukjun@gatech.edu): Main developer, developed core framework and functionalities
