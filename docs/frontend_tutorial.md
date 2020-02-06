@@ -39,7 +39,7 @@ Check the messages from the help for the future reference.
           
 --outfile: the MAESTRO model output file name
 ```
-The Maestro DNN Model, dnn_model.m, will be generated in data/model:
+The Maestro DNN Model, dnn_model.m, will be generated in ../../data/model:
 
 ## 2. Generate a Maestro Mapping file with the Maestro DNN Model file and specific dataflow.
 Check the messages from the help for the future reference.
@@ -54,7 +54,7 @@ Check the messages from the help for the future reference.
 --outfile: the MAESTRO DFSL output file
 ```
 
-The mapping file, out.m, will be generated in data/mapping:
+The mapping file, out.m, will be generated in ../../data/mapping:
 
 ## 3. Run Maestro with the generated mapping.
 
