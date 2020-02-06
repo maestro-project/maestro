@@ -12,11 +12,11 @@ if __name__ == "__main__":
     print('Begin processing')
     dsconv = 0
     base_path = '../../data/'
-    if os.path.exists(base_path + 'model/' + opt.model_file +".m"):
+    if os.path.exists(base_path + 'model/' + opt.model_file):
         with open(base_path + 'dataflow/' + opt.dataflow + ".m" ,"r") as fd:
             with open(base_path + 'dataflow/dpt.m' , "r") as fdpt:
                 with open(base_path + 'mapping/' + opt.outfile, "w") as fo:
-                    with open(base_path + 'model/' + opt.model_file + ".m", "r") as fm:
+                    with open(base_path + 'model/' + opt.model_file, "r") as fm:
                         for line in fm:
                             if(re.search("DSCONV",line)):
                                 dsconv = 1

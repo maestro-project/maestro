@@ -90,7 +90,7 @@ if __name__ == "__main__":
         model = getattr(models, opt.model)()
         model = model.to(device)
         mae_summary = summary(model, INPUT_SIZE)
-        with open("out/"+opt.outfile, "w") as fo:
+        with open("../../data/model/"+opt.outfile, "w") as fo:
             fo.write("Network {} {{\n".format(model.__module__))
             for key, val in mae_summary.items():
                 pc = re.compile("^Conv")
