@@ -1,11 +1,11 @@
 # How to generate a mapping (Maestro input file)
-A mapping contains a DNN model and the dataflow for each layer.
+A mapping is a Maestro input file which contains a DNN model and the dataflow for each layer.
 
 This tutorial is written to provide an easy way to generate a mapping from a PyTorch/Keras model.
 
 1. Generate a Maestro DNN Model file from a Pytorch/Keras model.
 2. Generate a Maestro Mapping file with the Maestro DNN Model file and specific dataflow.
-3. Run with the generated mapping.
+3. Run Maestro with the generated mapping.
 
 For the syntax of the mapping file, please refer to example mapping files in data/mapping.
 
@@ -56,7 +56,7 @@ Check the messages from the help for the future reference.
 
 The mapping file, out.m, will be generated in data/mapping:
 
-## 3. Run with the generated mapping.
+## 3. Run Maestro with the generated mapping.
 
 Go back to the maestro-dev directory.
 
