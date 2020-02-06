@@ -1,4 +1,4 @@
-# How to generate the mapping (Maestro input file)
+# How to generate a mapping (Maestro input file)
 A mapping contains a DNN model and the dataflow for each layer.
 
 This tutorial is written to provide an easy way to generate a mapping from a PyTorch/Keras model.
