@@ -286,6 +286,7 @@ Dataflow {
 
 ## Run MAESTRO with the converted mapping file
 Go back to the maestro-dev directory.
+
 > cd ../../
 
 Change the contents of "run.sh" to use the mapping file generated.
