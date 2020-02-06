@@ -1,15 +1,20 @@
-# How to change the DNN model and dataflow
-Create a mapping file under "data/mapping" and point the file using --DFSL_file parameter in "run.sh"
+# How to generate the mapping (Maestro input file)
+A mapping contains a DNN model and the dataflow for each layer.
 
-For syntax of the mapping file, please refer to other mapping files in data/mapping.
+This tutorial is written to provide an easy way to generate a mapping from a PyTorch/Keras model.
 
-# How to convert PyTorch/Keras model to MAESTRO supported modelfile
+1. Generate a Maestro DNN Model file from a Pytorch/Keras model.
+2. Generate a Maestro Mapping file with the Maestro DNN Model file and specific dataflow.
+3. Run with the generated mapping.
+
+For the syntax of the mapping file, please refer to example mapping files in data/mapping.
+
 > cd tools/frontend
 
-Check the messages from the help.
+Check the messages from the help for the future reference.
 > python frameworks_to_modelfile_maestro.py --help
 
-Supported models:
+Supported pre-trained models are provided in the following links:
 
 <ul>
   <li> PyTorch: [torchvision.models](https://pytorch.org/docs/stable/torchvision/models.html) </li>
@@ -163,7 +168,7 @@ Dimensions { K: 1, C: 384, R: 3, S: 3, Y: 14, X: 14 }
 }
 ```
 
-# How to convert the above generated modelfile to MAESTRO mapping:
+# How to convert the above generated modelfile to MAESTRO mapping with dataflow:
 
 > cd tools/frontend
 
@@ -182,107 +187,10 @@ Check the messages from the help.
           
 --outfile: the MAESTRO DFSL output file
 
-### A sample output mapping file Example:
-Model File used : dnn_model.m
-
-```
-Network mobilenetv2_1.00_224 {
-Layer block_16_expand {
-Type: CONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 960, C: 160, R: 1, S: 1, Y: 7, X: 7 }
-}
-Layer block_10_expand {
-Type: CONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 384, C: 64, R: 1, S: 1, Y: 14, X: 14 }
-}
-Layer block_3_project {
-Type: CONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 32, C: 144, R: 1, S: 1, Y: 28, X: 28 }
-}
-Layer block_9_expand {
-Type: CONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 384, C: 64, R: 1, S: 1, Y: 14, X: 14 }
-}
-Layer block_15_project {
-Type: CONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 160, C: 960, R: 1, S: 1, Y: 7, X: 7 }
-}
-Layer block_3_expand {
-Type: CONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 144, C: 24, R: 1, S: 1, Y: 56, X: 56 }
-}
-Layer block_14_depthwise {
-Type: DSCONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 1, C: 960, R: 3, S: 3, Y: 7, X: 7 }
-}
-```
-
-Dataflow: Output Stationary
-
 ### Command used for setting the above arguments:
 > python modelfile_to_mapping.py --model_file dnn_model.m --dataflow os --outfile out.m 
 
-The file will be generated in data/mapping:
-```
-Network mobilenetv2_1.00_224 {
-Layer block_16_expand {
-Type: CONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 960, C: 160, R: 1, S: 1, Y: 7, X: 7 }
-Dataflow {
-    TemporalMap(16,16) K;
-    SpatialMap(Sz(R),1) Y;
-    TemporalMap(Sz(S),1) X;
-    TemporalMap(1,1) C;
-    Cluster(16, P);
-    SpatialMap(1,1) K;
-    TemporalMap(Sz(R),1) Y;
-    TemporalMap(Sz(S),1) X;
-    TemporalMap(Sz(R),7) R;
-    TemporalMap(Sz(S),7) S;
-}
-}
-Layer block_10_expand {
-Type: CONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 384, C: 64, R: 1, S: 1, Y: 14, X: 14 }
-Dataflow {
-    TemporalMap(16,16) K;
-    SpatialMap(Sz(R),1) Y;
-    TemporalMap(Sz(S),1) X;
-    TemporalMap(1,1) C;
-    Cluster(16, P);
-    SpatialMap(1,1) K;
-    TemporalMap(Sz(R),1) Y;
-    TemporalMap(Sz(S),1) X;
-    TemporalMap(Sz(R),7) R;
-    TemporalMap(Sz(S),7) S;
-}
-}
-Layer block_3_project {
-Type: CONV
-Stride { X: 1, Y: 1 }
-Dimensions { K: 32, C: 144, R: 1, S: 1, Y: 28, X: 28 }
-Dataflow {
-    TemporalMap(16,16) K;
-    SpatialMap(Sz(R),1) Y;
-    TemporalMap(Sz(S),1) X;
-    TemporalMap(1,1) C;
-    Cluster(16, P);
-    SpatialMap(1,1) K;
-    TemporalMap(Sz(R),1) Y;
-    TemporalMap(Sz(S),1) X;
-    TemporalMap(Sz(R),7) R;
-    TemporalMap(Sz(S),7) S;
-}
-```
+The mapping file, out.m, will be generated in data/mapping:
 
 ## Run MAESTRO with the converted mapping file
 Go back to the maestro-dev directory.
