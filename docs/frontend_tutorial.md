@@ -285,6 +285,7 @@ Dataflow {
 ```
 
 ## Run MAESTRO with the converted mapping file
+User should change the directory to Maestro Home.
 Change the contents of "run.sh"
 
 --DFSL_file='data/mapping/out.m'
