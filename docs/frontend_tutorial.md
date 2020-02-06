@@ -41,7 +41,7 @@ Check the messages from the help for the future reference.
 ```
 The Maestro DNN Model, dnn_model.m, will be generated in data/model:
 
-# 2. Generate a Maestro Mapping file with the Maestro DNN Model file and specific dataflow.
+## 2. Generate a Maestro Mapping file with the Maestro DNN Model file and specific dataflow.
 Check the messages from the help for the future reference.
 > python modelfile_to_mapping.py --help
 
