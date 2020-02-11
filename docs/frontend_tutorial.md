@@ -68,4 +68,4 @@ Change the contents of "run.sh" to use the mapping file generated.
 
 Run MAESTRO
 
-> ./run.sh
+> ./run_frontend.sh
