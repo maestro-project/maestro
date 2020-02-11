@@ -62,10 +62,10 @@ Go back to the maestro-dev directory.
 
 > cd ../../
 
-Change the contents of "run.sh" to use the mapping file generated.
+Change the contents of "run_example.sh" to use the mapping file generated.
 
 --DFSL_file='data/mapping/out.m'
 
 Run MAESTRO
 
-> ./run_frontend.sh
+> ./run_example.sh
