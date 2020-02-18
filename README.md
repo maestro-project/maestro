@@ -1,5 +1,5 @@
 # maestro-dev
-A dev version of MAESTRO. We do not prorvide technical support for this version.
+A latest dev version of MAESTRO. This version includes some new features not fully verified. The stable version is in this repo(https://github.com/georgia-tech-synergy-lab/maestro-stable).
 
 # Package Dependences
 C++ compiler (g++)
