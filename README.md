@@ -1,5 +1,5 @@
-# maestro-dev
-A latest dev version of MAESTRO. This version includes some new features not fully verified. The stable version is in this repo(https://github.com/georgia-tech-synergy-lab/maestro-stable).
+# maestro
+The latest development version of MAESTRO. This version includes some new features not fully verified. The stable version is in this repo(https://github.com/georgia-tech-synergy-lab/maestro-stable).
 
 # Package Dependences
 C++ compiler (g++)
@@ -25,7 +25,7 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 
 --print_log_file=true/false : If set true, MAESTRO prints out a log file that contains various information of detailed computation patterns to "log.txt"
 
---DFSL_file='data/DFSL_description/Resnet50_dla.m' : Specify the target dataflow and layer description file
+--DFSL_file='data/mapping/Resnet50_dla.m' : Specify the target layer and its mapping
 
 --noc_bw=64 : NoC bandwidth
 
