@@ -120,7 +120,7 @@ namespace maestro {
 
         int layer_id = 0;
         for(auto layer : *(configuration_->network_)) {
-          auto layer_results = AnalyzeCostAllClusters(layer_id, false, false);
+          auto layer_results = AnalyzeCostAllClusters(layer_id, print_results_to_screen, print_log_to_file);
 
           long num_macs = this->GetNumPartialSums(layer_id);
           layer_results->at(layer_results->size()-1)->UpdateTopNumComputations(num_macs);
