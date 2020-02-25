@@ -97,7 +97,7 @@ namespace maestro {
           io.add_options()
             ("dataflow_file", po::value<std::string>(&dataflow_file_name) ,"the name of dataflow description file")
             ("layer_file", po::value<std::string>(&layer_file_name) ,"the name of layer dimension description file")
-            ("DFSL_file", po::value<std::string>(&dfsl_file_name), "the name of DFSL file")
+            ("Mapping_file", po::value<std::string>(&dfsl_file_name), "the name of DFSL file")
             ("HW_file", po::value<std::string>(&hw_file_name), "the name of hardware description file (temporary feature)")
           ;
 
