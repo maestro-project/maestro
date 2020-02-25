@@ -850,7 +850,7 @@ namespace maestro {
                   else if(tkn == DFSL::noc_bandwidth_decl_) {
                     state_ = ParserState::NoC_BW;
                   }
-                  else if (tkn == DFSL::noc_avg_latency_decl_) {
+                  else if (tkn == DFSL::noc_latency_per_hop_decl_) {
                     state_ = ParserState::NoC_Latency;
                   }
                   else {

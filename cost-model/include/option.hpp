@@ -51,6 +51,8 @@ namespace maestro {
       std::string dataflow_file_name = "data/dataflow/maeri.m";
       std::string layer_file_name = "data/layer/vgg16_conv1.m";
       std::string dfsl_file_name = "";
+      std::string hw_file_name = "";
+
 
       int num_simd_lanes = 9;
       bool do_reduction = true;
@@ -96,6 +98,7 @@ namespace maestro {
             ("dataflow_file", po::value<std::string>(&dataflow_file_name) ,"the name of dataflow description file")
             ("layer_file", po::value<std::string>(&layer_file_name) ,"the name of layer dimension description file")
             ("DFSL_file", po::value<std::string>(&dfsl_file_name), "the name of DFSL file")
+            ("HW_file", po::value<std::string>(&hw_file_name), "the name of hardware description file (temporary feature)")
           ;
 
           po::options_description nocs("Network on chip options");

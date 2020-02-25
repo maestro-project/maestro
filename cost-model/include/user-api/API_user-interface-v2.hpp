@@ -34,6 +34,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include "BASE_base-objects.hpp"
 
 #include "DFSL_parser.hpp"
+#include "DFSL_hw-parser.hpp"
 
 #include "DFA_tensor.hpp"
 
@@ -90,6 +91,7 @@ namespace maestro {
         tensor_info_mapping_table_ = std::make_unique<std::map<LayerType, int>>();
 
         ParseDFSL();
+        ParseHW();
         ConstructNoCs();
         AnalyzeClusters();
       }
@@ -415,6 +417,26 @@ namespace maestro {
           message_printer->PrintMsg(1, layer->ToString());
         }
       }
+
+      void ParseHW() {
+        if(configuration_->hw_file_name_ != "") {
+          DFSL::HWParser tmp_hw_parser(configuration_->hw_file_name_);
+          auto ret = tmp_hw_parser.ParseHW();
+          configuration_->num_pes_ = ret->num_pes_;
+          configuration_->l1_size_ = ret->l1_size_;
+          configuration_->l2_size_ = ret->l2_size_;
+          configuration_->noc_bw_->at(0) = ret->noc_bw_;
+          configuration_->noc_bw_->at(1) = ret->noc_bw_;
+          configuration_->noc_bw_->at(2) = ret->noc_bw_;
+          configuration_->noc_bw_->at(3) = ret->noc_bw_;
+          configuration_->noc_latency_->at(0) = ret->noc_hops_;
+          configuration_->noc_latency_->at(1) = ret->noc_hops_;
+          configuration_->noc_latency_->at(2) = ret->noc_hops_;
+          configuration_->noc_latency_->at(3) = ret->noc_hops_;
+
+        }
+      }
+
 
       void Setup(std::shared_ptr<maestro::DFA::Layer> layer)
       {
