@@ -18,10 +18,10 @@ Python 2.7 or later
 > scons
 
 # How to run the program
-> ./run.sh
+> ./run_example.sh
 
 # How to change the parameters
-Change the contents of "run.sh" For parameters other than listed below, please ignore it; active development is going on them so correct functionailty is not guaranteed.
+Change the contents of "run_example.sh" For parameters other than listed below, please ignore it; active development is going on them so correct functionailty is not guaranteed.
 
 --print_res=true/false : If set true, MAESTRO prints out detailed cost information to the screen
 
@@ -29,7 +29,9 @@ Change the contents of "run.sh" For parameters other than listed below, please i
 
 --print_log_file=true/false : If set true, MAESTRO prints out a log file that contains various information of detailed computation patterns to "log.txt"
 
---DFSL_file='data/mapping/Resnet50_dla.m' : Specify the target layer and its mapping
+--Mapping_file='data/mapping/Resnet50_dla.m' : Specify the target layer and its mapping
+
+--HW_file='./data/hw/hw_parameters.m' : Specify the target hardware parameters
 
 --noc_bw=64 : NoC bandwidth
 
