@@ -1,9 +1,9 @@
 # maestro
-The latest development version of MAESTRO. This version includes some new features not fully verified. The stable version is in this repo(https://github.com/georgia-tech-synergy-lab/maestro-stable).
+The latest development version of MAESTRO. This version includes some new features not fully verified. The stable version can be found [here](https://github.com/georgia-tech-synergy-lab/maestro-stable).
 
-To get started with using MAESTRO, check the documentation site (http://maestro.ece.gatech.edu/docs/build/html/index.html).
+To get started with using MAESTRO, check the [documentation site](http://maestro.ece.gatech.edu/docs/build/html/index.html).
 
-General information can be found at the MAESTRO webstie (http://maestro.ece.gatech.edu/)
+General information can be found at the [MAESTRO webstie](http://maestro.ece.gatech.edu/)
 
 # Package Dependences
 C++ compiler (g++)
