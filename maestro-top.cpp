@@ -98,6 +98,7 @@ int main(int argc, char** argv)
 
       auto config = std::make_shared<maestro::ConfigurationV2>(
           option.dfsl_file_name,
+          option.hw_file_name,
           noc_bw,
           noc_latency,
           noc_multcast,
@@ -108,8 +109,6 @@ int main(int argc, char** argv)
           option.l2_size
           );
 
-
-      std::cout << "BW: " << bw << std::endl;
       auto api = std::make_shared<maestro::APIV2>(config);
       auto res = api->AnalyzeNeuralNetwork(option.print_res_to_screen, true);
 
@@ -138,6 +137,7 @@ int main(int argc, char** argv)
 
     auto config = std::make_shared<maestro::ConfigurationV2>(
         option.dfsl_file_name,
+        option.hw_file_name,
         noc_bw,
         noc_latency,
         noc_multcast,

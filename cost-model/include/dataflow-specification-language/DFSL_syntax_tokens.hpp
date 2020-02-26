@@ -28,10 +28,10 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 namespace maestro {
 
 
-	namespace DFSL {
+  namespace DFSL {
 
-	  /* Common tokens */
-	  const std::string brace_open_ = "{";
+    /* Common tokens */
+    const std::string brace_open_ = "{";
     const std::string brace_close_ = "}";
     const std::string bracket_open_ = "[";
     const std::string bracket_close_ = "]";
@@ -42,71 +42,96 @@ namespace maestro {
     /* Constant definition */
     const std::string constant_decl_ = "Constant";
 
-		/* Neural network and layer Description */
-		const std::string network_decl_ = "Network";
-		const std::string layer_decl_ = "Layer";
-		const std::string layer_type_decl_ = "Type";
-			const std::string layer_type_conv_ = "CONV";
+    /* Neural network and layer Description */
+    const std::string network_decl_ = "Network";
+    const std::string layer_decl_ = "Layer";
+    const std::string layer_type_decl_ = "Type";
+      const std::string layer_type_conv_ = "CONV";
       const std::string layer_type_residual_ = "RESIDUAL_IDENTITY";
-			const std::string layer_type_fc_ = "FC";
-			const std::string layer_type_pool_ = "POOL";
-			const std::string layer_type_dsconv_ = "DSCONV";
-			const std::string layer_type_trconv_ = "TRCONV";
+      const std::string layer_type_fc_ = "FC";
+      const std::string layer_type_pool_ = "POOL";
+      const std::string layer_type_dsconv_ = "DSCONV";
+      const std::string layer_type_trconv_ = "TRCONV";
       const std::string layer_type_ngconv_ = "NGCONV"; // Nested grouped convolution (ResNeXt)
-			const std::string layer_type_lstm_ = "LSTM";
+      const std::string layer_type_lstm_ = "LSTM";
+      const std::string layer_type_gemm_ = "GEMM";
     const std::string layer_stride_decl_ = "Stride";
 
-		const std::string layer_dim_decl_ = "Dimensions";
-			const std::string layer_dim_input_batch_    = "N";
+    const std::string layer_dim_decl_ = "Dimensions";
+      const std::string layer_dim_input_batch_    = "N";
       const std::string layer_dim_group_          = "G";
-			const std::string layer_dim_output_channel_ = "K";
-			const std::string layer_dim_input_channel_  = "C";
-			const std::string layer_dim_weight_height_  = "R";
-			const std::string layer_dim_weight_width_   = "S";
-			const std::string layer_dim_input_height_   = "Y";
-			const std::string layer_dim_input_width_    = "X";
+      const std::string layer_dim_output_channel_ = "K";
+      const std::string layer_dim_input_channel_  = "C";
+      const std::string layer_dim_weight_height_  = "R";
+      const std::string layer_dim_weight_width_   = "S";
+      const std::string layer_dim_input_height_   = "Y";
+      const std::string layer_dim_input_width_    = "X";
       const std::string layer_dim_output_height_  = "Y'";
       const std::string layer_dim_output_width_   = "X'";
 
 
-		const std::string layer_expansion_factor_decl_ = "ExpansionSize";
-		const std::string layer_pooling_size_decl_ = "PoolSize";
-		const std::string layer_stride_size_decl_ = "Stride";
+    const std::string layer_expansion_factor_decl_ = "ExpansionSize";
+    const std::string layer_pooling_size_decl_ = "PoolSize";
+    const std::string layer_stride_size_decl_ = "Stride";
 
-		const std::string layer_dataflow_decl_ = "Dataflow";
-		const std::string dataflow_temporal_map_ = "TemporalMap";
-		const std::string dataflow_spatial_map_ = "SpatialMap";
-		const std::string dataflow_cluster_ = "Cluster";
+    const std::string layer_dataflow_decl_ = "Dataflow";
+    const std::string dataflow_temporal_map_ = "TemporalMap";
+    const std::string dataflow_spatial_map_ = "SpatialMap";
+    const std::string dataflow_cluster_ = "Cluster";
 
-		const std::string dataflow_dim_size_indicatior_ = "Sz";
+    const std::string dataflow_dim_size_indicatior_ = "Sz";
 
-		const std::string dataflow_cluster_type_logical_ = "L";
-		const std::string dataflow_cluster_type_physical_ = "P";
+    const std::string dataflow_cluster_type_logical_ = "L";
+    const std::string dataflow_cluster_type_physical_ = "P";
+
+    /* Tmp HW parser */
+    const std::string tmp_num_pes_decl_ = "NumPEs";
+    const std::string tmp_l1size_decl_ = "L1Size";
+    const std::string tmp_l2size_decl_ = "L2Size";
+    const std::string tmp_noc_bw_decl_ = "NoC_BW";
+    const std::string tmp_noc_hops_decl_ = "NoC_NumHops";
 
 
-		/* Hardware Resource Description */
-		const std::string accelerator_decl_ = "Accelerator";
+    /* Hardware Resource Description */
+    const std::string accelerator_decl_ = "Accelerator";
+    const std::string compute_cluster_decl_ = "ComputeUnitCluster";
+    const std::string compute_cluster_level_decl_ = "Level";
+    const std::string compute_cluster_counts_ = "NumInstances";
+    const std::string compute_cluster_size_decl_ = "NumSubClusters";
 
-		// NoC Description
-		const std::string noc_decl_ = "NoC";
-		const std::string noc_bandwidth_decl_ = "Bandwidth";
-		const std::string noc_avg_latency_decl_ = "AvgLatency";
+    // NoC Description
+    const std::string noc_decl_ = "DistributionNoC";
+    const std::string noc_bandwidth_decl_ = "Bandwidth";
+    const std::string noc_latency_per_hop_decl_ = "LatencyPerHop";
+    const std::string noc_tensor_decl_ = "Tensor";
+    const std::string noc_avg_num_hops_decl_ = "AvgNumHops";
+    const std::string noc_type_decl_ = "Type";
+      const std::string dist_noc_type_bus_ = "Bus";
+      const std::string dist_noc_type_tree_ = "Tree";
+      const std::string dist_noc_type_crossbar_ = "Crossbar";
+      const std::string dist_noc_type_systolic_ = "Systolic";
+      const std::string dist_noc_type_mesh_ = "Mesh";
 
-		// PE Description
-		const std::string pe_decl_ = "PE";
-		const std::string num_pe_decl_ = "NumPEs";
-		const std::string vector_width_decl_ = "VectorWidth";
+    const std::string redc_noc_decl_ = "ReductionNoC";
+    const std::string redc_noc_type_adder_tree_ = "AdderTree";
+    const std::string redc_noc_type_systolic_ = "Systolic";
 
-		const std::string mult_precision_decl_ = "MultPrecision";
+
+    // PE Description
+    const std::string pe_decl_ = "PE";
+    const std::string num_pe_decl_ = "NumPEs";
+    const std::string vector_width_decl_ = "VectorWidth";
+
+    const std::string mult_precision_decl_ = "MultPrecision";
     const std::string add_precision_decl_ = "AddPrecision";
       const std::string bfloat_precision_type = "BFLOAT";
       const std::string float_precision_type = "FLOAT";
       const std::string fixed_precision_type = "INT";
 
-			const std::string fp4_precision = "FP4";
-			const std::string fp8_precision = "FP8";
-			const std::string fp16_precision = "FP16";
-			const std::string fp32_precision = "FP32";
+      const std::string fp4_precision = "FP4";
+      const std::string fp8_precision = "FP8";
+      const std::string fp16_precision = "FP16";
+      const std::string fp32_precision = "FP32";
 
       const std::string int4_precision = "INT4";
       const std::string int8_precision = "INT8";
@@ -114,14 +139,17 @@ namespace maestro {
       const std::string int32_precision = "INT32";
 
 
-		// Buffer Description
-		const std::string buffer_decl_ = "Buffer";
-	  const std::string buffer_type_global_ = "GlobalL2";
-    const std::string buffer_type_local_ = "LocalL1";
-//		const std::string buffer_level_decl_ = "Level:";
-//		const std::string buffer_size_decl_ = "Size:";
+    // Buffer Description
+    const std::string buffer_decl_ = "Buffer";
+    const std::string buffer_tensor_decl_ = "Tensor";
+    const std::string buffer_size_decl_ = "Size";
+    const std::string buffer_type_decl_ = "Type";
+    const std::string buffer_type_fifo_ = "FIFO";
+    const std::string buffer_type_circular_fifo_ = "CFIFO";
+    const std::string buffer_type_scratchpad_ = "ScratchPad";
+    const std::string buffer_type_buffet_ = "Buffet";
 
-	};
+  };
 
 }
 ;

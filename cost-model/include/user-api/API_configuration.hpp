@@ -78,6 +78,7 @@ namespace maestro {
     public:
       ConfigurationV2(
           std::string dfsl_file_name,
+          std::string hw_file_name,
           std::shared_ptr<std::vector<int>> noc_bw,
           std::shared_ptr<std::vector<int>> noc_latency,
           std::shared_ptr<std::vector<bool>> noc_multcast,
@@ -87,6 +88,7 @@ namespace maestro {
           int l1_sram_byte_size,
           int l2_sram_byte_size) :
         dfsl_file_name_(dfsl_file_name),
+        hw_file_name_(hw_file_name),
         noc_multcast_(noc_multcast),
         noc_latency_(noc_latency),
         noc_bw_(noc_bw),
@@ -104,6 +106,8 @@ namespace maestro {
       }
 
       std::string dfsl_file_name_;
+      std::string hw_file_name_;
+
 
       std::shared_ptr<DFA::NeuralNetwork> network_;
 
