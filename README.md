@@ -1,8 +1,8 @@
 # MAESTRO: An Open-source Infrastructure for Modeling Dataflows within Deep Learning Accelerators
-This is the latest development version of MAESTRO, so it may include new features not fully verified. The stable version can be found [here](https://github.com/georgia-tech-synergy-lab/maestro-stable).
+This is the latest development version of MAESTRO, so this may include new features not fully verified. The stable version can be found [here](https://github.com/georgia-tech-synergy-lab/maestro-stable).
 
 # What is MAESTRO?
-MAESTRO is an open-source tool for modeling and evaluating the performance and energy-efficiency of different dataflows. MAESTRO is actively developed by the [Synergy Lab](https://synergy.ece.gatech.edu/) at Georgia Institute of Technology. For more details about MAESTRO, please visit the following links.
+MAESTRO is an open-source tool for modeling and evaluating the performance and energy-efficiency of different dataflows. MAESTRO is actively developed by the [Synergy Lab](https://synergy.ece.gatech.edu/) at [Georgia Institute of Technology](https://www.gatech.edu/). For more details about MAESTRO, please visit the following links.
 
 - [MAESTRO Website](http://maestro.ece.gatech.edu/)
 - [MAESTRO Docs](http://maestro.ece.gatech.edu/docs/build/html/index.html)
