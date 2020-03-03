@@ -1,5 +1,5 @@
 # MAESTRO: An Open-source Infrastructure for Modeling Dataflows within Deep Learning Accelerators
-[![Documentation Status](https://readthedocs.org/projects/maestro-docs/badge/?version=latest)](https://maestro-docs.readthedocs.io/en/latest/?badge=latest)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 This is the latest development version of MAESTRO, so this may include new features not fully verified. The stable version can be found [here](https://github.com/georgia-tech-synergy-lab/maestro-stable).
 
