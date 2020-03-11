@@ -1,58 +1,16 @@
-# maestro
-The latest development version of MAESTRO. This version includes some new features not fully verified. The stable version can be found [here](https://github.com/georgia-tech-synergy-lab/maestro-stable).
+# MAESTRO: An Open-source Infrastructure for Modeling Dataflows within Deep Learning Accelerators
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
-To get started with using MAESTRO, check the [documentation site](http://maestro.ece.gatech.edu/docs/build/html/index.html).
+This is the latest development version of MAESTRO, so this may include new features not fully verified. The stable version can be found [here](https://github.com/georgia-tech-synergy-lab/maestro-stable).
 
-General information can be found at the [MAESTRO webstie](http://maestro.ece.gatech.edu/)
+# What is MAESTRO?
+MAESTRO is an open-source tool for modeling and evaluating the performance and energy-efficiency of different dataflows. MAESTRO is actively developed by the [Synergy Lab](https://synergy.ece.gatech.edu/) at [Georgia Institute of Technology](https://www.gatech.edu/). For more details about MAESTRO, please visit the following links.
 
-# Package Dependences
-C++ compiler (g++)
-
-SCONS build system (scons)
-
-Boost libarary (libboost-all-dev)
-
-Python 2.7 or later
-
-# How to compile the code
-> scons
-
-# How to run the program
-> ./run.sh
-
-# How to change the parameters
-Change the contents of "run.sh" For parameters other than listed below, please ignore it; active development is going on them so correct functionailty is not guaranteed.
-
---print_res=true/false : If set true, MAESTRO prints out detailed cost information to the screen
-
---print_res_csv_file=true/false : If set true, MAESTRO prints out a csv file that contains various statistics
-
---print_log_file=true/false : If set true, MAESTRO prints out a log file that contains various information of detailed computation patterns to "log.txt"
-
---DFSL_file='data/mapping/Resnet50_dla.m' : Specify the target layer and its mapping
-
---noc_bw=64 : NoC bandwidth
-
---noc_hop_latency=1 : NoC latency per hops
-
---noc_mc_support=true : NoC multicast support (In current dev version it's always on)
-
---num_pes=256 : Number of PEs
-
---num_pe_alus=1 : PE ALU vector width
-
---l1_size=32 : l1 buffer size
-
---l2_size=512 : l2 buffer size
-
-# How to generate input files for Maestro?
-Read the [tutorial](https://github.com/ghjeong12/maestro-dev/blob/dev/docs/frontend_tutorial.md).
+- [MAESTRO Website](http://maestro.ece.gatech.edu/)
+- [MAESTRO Docs](http://maestro.ece.gatech.edu/docs/build/html/index.html)
 
 # Contributors
-Hyoukjun Kwon (hyoukjun@gatech.edu): Main developer, developed core framework and functionalities
-
-Prasanth Chatarasi (cprasanth@gatech.edu): Improved APIs
-
-Felix (Sheng-Chun) Kao (felix@gatech.edu): Implemented Pytorch frontend
-
-Geonhwa Jeong (geonhwa.jeong@gatech.edu): Implemented Keras frontend
+- Hyoukjun Kwon (hyoukjun@gatech.edu): Main developer, developed core framework and functionalities
+- Prasanth Chatarasi (cprasanth@gatech.edu): Improved APIs
+- Felix (Sheng-Chun) Kao (felix@gatech.edu): Implemented Pytorch frontend
+- Geonhwa Jeong (geonhwa.jeong@gatech.edu): Implemented Keras frontend
