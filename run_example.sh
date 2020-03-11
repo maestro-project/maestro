@@ -2,7 +2,7 @@
           --print_res_csv_file=true \
           --print_log_file=false \
           --Mapping_file='data/mapping/Resnet50_dla.m' \
-          --HW_file='./data/hw/hw_parameters.m' \
+          --HW_file='./data/hw/accelerator_1.m' \
           --noc_bw=32 \
           --noc_hops=1 \
           --noc_hop_latency=1 \
