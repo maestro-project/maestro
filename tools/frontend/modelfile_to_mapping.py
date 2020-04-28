@@ -6,7 +6,7 @@ from argparse import RawTextHelpFormatter
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=RawTextHelpFormatter)
     parser.add_argument('--model_file', type=str, default="dnn_model", help="<name of your model file with layer specs>")
-    parser.add_argument('--dataflow', type=str, default="os", help='dataflow choices: dla, os, ws, rs')
+    parser.add_argument('--dataflow', type=str, default="ykp_os", help='dataflow choices: ykp_os, kcp_ws, xp_ws, rs')
     parser.add_argument('--outfile', type=str, default="out.m", help='output file name')
     opt = parser.parse_args()
     print('Begin processing')
