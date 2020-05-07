@@ -17,7 +17,6 @@ Network Transformer {
 		Stride { X: 1, Y: 1 }
 		//N=1, K(conv)=M(matr), C=1, R(conv)=K(matr),S=1,Y(conv)=K(matr), X(conv)=N(matr)
 		Dimensions { N: 1, K: Seq_Len, C: 1, R: 64, S: 1, Y:64, X:Seq_Len }
-		}
 	}
 
 	Layer SD_MatMul_V_00 { //Mat mul, batch is 1
