@@ -20,8 +20,7 @@ if __name__ == "__main__":
                         for line in fm:
                             if(re.search("DSCONV",line)):
                                 dsconv = 1
-                            write_pos = re.match("Dimensions" ,line)
-                            if(write_pos):
+                            if(re.search("Dimensions",line)):
                                 fo.write(line)
                                 if(dsconv):
                                     fdpt.seek(0)
@@ -36,6 +35,3 @@ if __name__ == "__main__":
         print("Mapping file created")
     else:
         print("Model file not found, please provide one")
-
-
-
