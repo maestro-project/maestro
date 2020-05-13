@@ -9,6 +9,11 @@ MAESTRO is an open-source tool for modeling and evaluating the performance and e
 - [MAESTRO Website](http://maestro.ece.gatech.edu/)
 - [MAESTRO Docs](http://maestro.ece.gatech.edu/docs/build/html/index.html)
 
+# Notices
+### May 13th, 2020
+
+We updated the naming convention of mappings and the directory structure of data folder.
+
 # Contributors
 - Hyoukjun Kwon (hyoukjun@gatech.edu): Main developer, developed core framework and functionalities
 - Prasanth Chatarasi (cprasanth@gatech.edu): Improved APIs
