@@ -1,7 +1,7 @@
 ./maestro --print_res=true \
           --print_res_csv_file=true \
           --print_log_file=false \
-          --Mapping_file='data/mapping/Resnet50_dla.m' \
+          --Mapping_file='data/mapping/GEMM_Example.m' \
           --HW_file='./data/hw/accelerator_1.m' \
           --noc_bw=32 \
           --noc_hops=1 \

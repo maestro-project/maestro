@@ -42,7 +42,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 #include "DFA_cluster-analysis.hpp"
 
-#include "AHW-noc-model.hpp"
+#include "AHW_noc-model.hpp"
 
 
 namespace maestro {
@@ -59,7 +59,7 @@ namespace maestro {
                         std::shared_ptr<DFA::TensorTable> tensors,
                         std::shared_ptr<DFA::DimensionTable> full_dimensions,
                         std::shared_ptr<DFA::DirectiveTable> full_dataflow,
-                        std::shared_ptr<std::vector<std::shared_ptr<abstract_hw::NetworkOnChipModel>>> nocs) :
+                        std::shared_ptr<std::vector<std::shared_ptr<AHW::NetworkOnChipModel>>> nocs) :
           MAESTROClass("ClusterAnalysis"),
           layer_type_(layer_type),
           num_unit_clusters_(num_pes),
@@ -99,7 +99,7 @@ namespace maestro {
         std::shared_ptr<DFA::TensorTable> tensors_;
         std::shared_ptr<DFA::DimensionTable> full_dimensions_;
         std::shared_ptr<DFA::DirectiveTable> full_dataflow_;
-        std::shared_ptr<std::vector<std::shared_ptr<abstract_hw::NetworkOnChipModel>>> nocs_;
+        std::shared_ptr<std::vector<std::shared_ptr<AHW::NetworkOnChipModel>>> nocs_;
 
 
         std::shared_ptr<DFA::ClusterTable> clusters_;
@@ -139,7 +139,7 @@ namespace maestro {
                   error_handler->PrintErrorMsg(TL::ErrorCode::MissingNoCForCluster, std::to_string(current_cluster_level) ,this->GetName());
                   error_handler->TerminateProgram();
                 }
-                std::shared_ptr<abstract_hw::NetworkOnChipModel> noc = nocs_->at(current_cluster_level);
+                std::shared_ptr<AHW::NetworkOnChipModel> noc = nocs_->at(current_cluster_level);
 
                 auto var_list_input_tensor = GetInputTensorVars();
                 ConvertToInputCentric(cluster_dataflow);

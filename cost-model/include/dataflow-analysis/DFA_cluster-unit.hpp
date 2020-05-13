@@ -33,7 +33,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include "BASE_maestro-class.hpp"
 #include "TL_error-handler.hpp"
 
-#include "AHW-noc-model.hpp"
+#include "AHW_noc-model.hpp"
 #include "DFA_dimension-table.hpp"
 #include "DFA_directives.hpp"
 #include "DFA_directive-table.hpp"
@@ -53,7 +53,7 @@ namespace maestro {
 				            std::shared_ptr<DFA::DirectiveTable> dataflow,
                     std::shared_ptr<DFA::DimensionTable> dimensions,
                     std::shared_ptr<DFA::TensorTable> tensors,
-				            std::shared_ptr<abstract_hw::NetworkOnChipModel> noc) :
+				            std::shared_ptr<AHW::NetworkOnChipModel> noc) :
 				      cluster_level_(cluster_level),
 				      cluster_size_(cluster_size),
 				      noc_(noc),
@@ -76,7 +76,7 @@ namespace maestro {
 				  return cluster_level_;
 				}
 
-				std::shared_ptr<abstract_hw::NetworkOnChipModel> GetNoCModel() {
+				std::shared_ptr<AHW::NetworkOnChipModel> GetNoCModel() {
 				  return noc_;
 				}
 
@@ -505,7 +505,7 @@ namespace maestro {
 
 				std::shared_ptr<DFA::DimensionTable> dimensions_;
         std::shared_ptr<DFA::DirectiveTable> dataflow_;
-				std::shared_ptr<abstract_hw::NetworkOnChipModel> noc_;
+				std::shared_ptr<AHW::NetworkOnChipModel> noc_;
 
 	      std::unique_ptr<std::map<std::string, int>> num_mapped_elements_; //TSz
 

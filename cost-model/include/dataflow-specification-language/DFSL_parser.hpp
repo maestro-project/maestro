@@ -33,6 +33,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include<boost/tokenizer.hpp>
 #include<boost/format.hpp>
 
+#include "BASE_maestro-class.hpp"
 #include "DSE_design-options.hpp"
 #include "DFA_directive-table.hpp"
 #include "DFA_directives.hpp"
@@ -59,10 +60,11 @@ namespace maestro {
 		                       Noc_Decl, NoC_Identifier, NoC_Name, Noc_Name_Identifier, SubNoC_Body, NoC_Body, NoC_BW, NoC_Latency,
 		                       };
 
-		class InputParser {
+		class InputParser : public MAESTROClass {
 
 			public:
-				InputParser(std::string file_nm) :
+				InputParser(std::string file_nm, std::string class_name = "Input Parser") :
+				  MAESTROClass(class_name),
 					file_name_(file_nm) {
 					in_file_.open(file_nm);
 					if(!in_file_) {
@@ -83,7 +85,7 @@ namespace maestro {
 
 		class DFSLParser : public InputParser {
 			public:
-				DFSLParser(std::string file_name) : InputParser(file_name), num_pes_(0) {
+				DFSLParser(std::string file_name) : InputParser(file_name, "DFSL Parser"), num_pes_(0) {
 				}
 
 				void ParseDFSL(std::shared_ptr<DFA::NeuralNetwork> network) {
@@ -289,8 +291,6 @@ namespace maestro {
                   }
                   break;
                 }
-
-
                 case ParserState::Layer_Type: {
                   if(tkn == DFSL::layer_type_conv_) {
                     if(!tmp_name.empty()) {
@@ -301,6 +301,16 @@ namespace maestro {
                       curr_layer = std::make_shared<DFA::ConvLayer>(DFSL::layer_decl_);
                     }
                     layer_type = LayerType::CONV;
+                  }
+                  else if(tkn == DFSL::layer_type_gemm_) {
+                    if(!tmp_name.empty()) {
+                      curr_layer = std::make_shared<DFA::GEMMLayer>(tmp_name);
+                      tmp_name.clear();
+                    }
+                    else {
+                      curr_layer = std::make_shared<DFA::GEMMLayer>(DFSL::layer_decl_);
+                    }
+                    layer_type = LayerType::GEMM;
                   }
                   else if(tkn == DFSL::layer_type_fc_) {
                     //TODO

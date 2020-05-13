@@ -36,7 +36,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 #include "DSE_hardware_modules.hpp"
 
-#include "AHW-noc-model.hpp"
+#include "AHW_noc-model.hpp"
 
 
 
@@ -49,7 +49,7 @@ namespace maestro {
       : num_pes_(num_pes) {
         network_= std::make_shared<DFA::NeuralNetwork>();
         tensors_ = std::make_shared<DFA::TensorTable>();
-        nocs_ = std::make_shared<std::vector<std::shared_ptr<abstract_hw::NetworkOnChipModel>>>();
+        nocs_ = std::make_shared<std::vector<std::shared_ptr<AHW::NetworkOnChipModel>>>();
         cluster_analysis_= std::make_shared<std::vector<std::shared_ptr<DFA::ClusterAnalysis>>>();
         target_accelerator_ = std::make_shared<DSE::Accelerator>
                                 (num_pes, vector_width, top_noc_bw, l1_sram_byte_size, l2_sram_byte_size);
@@ -68,7 +68,7 @@ namespace maestro {
 
       //Hardware
       std::shared_ptr<DSE::Accelerator> target_accelerator_;
-      std::shared_ptr<std::vector<std::shared_ptr<abstract_hw::NetworkOnChipModel>>> nocs_;
+      std::shared_ptr<std::vector<std::shared_ptr<AHW::NetworkOnChipModel>>> nocs_;
 
       int num_pes_;
   }; // End of class Configuration
@@ -98,7 +98,7 @@ namespace maestro {
         l2_size_(l2_sram_byte_size) {
         network_= std::make_shared<DFA::NeuralNetwork>();
         tensors_ = std::make_shared<std::vector<std::shared_ptr<DFA::TensorTable>>>();
-        nocs_ = std::make_shared<std::vector<std::shared_ptr<abstract_hw::NetworkOnChipModel>>>();
+        nocs_ = std::make_shared<std::vector<std::shared_ptr<AHW::NetworkOnChipModel>>>();
         cluster_analysis_= std::make_shared<std::vector<std::shared_ptr<DFA::ClusterAnalysis>>>();
         //TODO: Update NoC setup processes
         target_accelerator_ = std::make_shared<DSE::Accelerator>
@@ -116,7 +116,7 @@ namespace maestro {
 
       //Hardware
       std::shared_ptr<DSE::Accelerator> target_accelerator_;
-      std::shared_ptr<std::vector<std::shared_ptr<abstract_hw::NetworkOnChipModel>>> nocs_;
+      std::shared_ptr<std::vector<std::shared_ptr<AHW::NetworkOnChipModel>>> nocs_;
 
       std::shared_ptr<std::vector<bool>> noc_multcast_;
       std::shared_ptr<std::vector<int>> noc_latency_;

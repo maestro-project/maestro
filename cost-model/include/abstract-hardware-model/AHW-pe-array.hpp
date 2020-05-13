@@ -29,7 +29,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 namespace maestro {
 
-	namespace abstract_hw {
+	namespace AHW {
 		class ProcessingElementArray {
 			public:
 				ProcessingElementArray(int num_pes, std::shared_ptr<ProcessingElement> pe_model) :

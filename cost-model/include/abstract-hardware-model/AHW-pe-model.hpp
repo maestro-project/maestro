@@ -24,7 +24,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #define MAESTRO_AHW_PE_MODEL_HPP_
 
 namespace maestro {
-	namespace abstract_hw {
+	namespace AHW {
 
 		enum class Precision {FP8, FP16, FP32, INT8, INT16, INT32};
 

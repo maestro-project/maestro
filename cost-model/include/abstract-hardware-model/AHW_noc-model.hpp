@@ -24,7 +24,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 namespace maestro {
 
-	namespace abstract_hw {
+	namespace AHW {
 
 		class NetworkOnChipModel {
 			public:

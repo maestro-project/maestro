@@ -85,7 +85,7 @@ namespace maestro {
 
           std::shared_ptr<std::vector<std::shared_ptr<CostAnalyisResults>>> ret = std::make_shared<std::vector<std::shared_ptr<CostAnalyisResults>>>();
 
-          AnalyzeClusterLevel_V2(0, clusters_->size(), clusters_->GetCluster(0)->GetDimensions(), ret, 0, true, write_log_file);
+          AnalyzeClusterLevel_V2(0, clusters_->size(), clusters_->GetCluster(0)->GetDimensions(), ret, 1, true, write_log_file);
 
           return ret;
         }
@@ -200,7 +200,9 @@ namespace maestro {
               num_partial_sums += reuse_analysis->GetNumCriticalPathPartialSums(tensor, iteration_case);
             }
 
+
             if(num_partial_sums <= 0) {
+              std::cout << "Num partial sums is less than 0!" << std::endl;
               if(write_log_file && cluster_idx <= print_cluster_lv) {
                 log_file << "Skipping Invalid case" << std::endl;
               }
@@ -316,7 +318,6 @@ namespace maestro {
             else { // Base cluster
               computation_delay =static_cast<long>(
                   std::ceil(static_cast<double>(num_partial_sums) / static_cast<double>(num_simd_lanes_)));
-              if(computation_delay == 0) computation_delay = 1;
             }
             ////////////////////////////
 
@@ -342,9 +343,11 @@ namespace maestro {
 
             num_active_unit_clusters = (num_active_unit_clusters== 0)? num_active_clusters : num_active_unit_clusters;
             results->SetNumAvgActiveClusters(results->GetNumAvgActiveClusters() + num_active_unit_clusters * num_case_occurrences);
+
             //TODO: Doble check
             if(computation_delay == 0)
               computation_delay = 1;
+
             peak_noc_bw_req = std::max(peak_noc_bw_req, std::max(ingress_spatial_traffic, egress_spatial_traffic)/computation_delay);
             avg_noc_bw_req += (num_case_occurrences * std::max(ingress_spatial_traffic, egress_spatial_traffic))/computation_delay;
 
