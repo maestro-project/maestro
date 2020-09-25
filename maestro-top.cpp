@@ -33,7 +33,7 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 #include "DFA_tensor.hpp"
 
-#include "AHW-noc-model.hpp"
+#include "AHW_noc-model.hpp"
 
 #include "CA_cost-analysis-results.hpp"
 

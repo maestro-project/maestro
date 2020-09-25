@@ -30,8 +30,8 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 
 namespace maestro{
 
-    enum class ConvLayerDimensionIdentifier {K, C, R, S ,Y, X};
-    enum class LayerType {CONV, DSCONV, FC, POOL, TRCONV, NGCONV, LSTM, NumLayerTypes};
+//    enum class ConvLayerDimensionIdentifier {K, C, R, S ,Y, X};
+    enum class LayerType {CONV, DSCONV, FC, POOL, TRCONV, NGCONV, LSTM, GEMM, NumLayerTypes};
 
     namespace DFA {
 
@@ -152,6 +152,63 @@ namespace maestro{
           std::shared_ptr<DFA::DirectiveTable> dataflow_directives_;
 
       }; // End of class Layer
+
+      class GEMMLayer : public Layer {
+        public:
+
+          GEMMLayer (std::string name) : Layer(name) {
+          }
+
+          GEMMLayer (std::string name, std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> dimensions) :
+           Layer(name, LayerType::GEMM, dimensions) {
+          }
+
+          virtual ~GEMMLayer() {}
+
+
+          int GetSize(std::string id) {
+            for (auto &it : *dimensions_) {
+              if(it->GetName() == id) {
+                return it->GetSize();
+              }
+            }
+            return -1;
+          }
+
+          virtual std::string ToString() {
+            std::string ret = "Layer " + name_ + "{\nType: GEMM\n Dimension {\n";
+            for (auto &it : *dimensions_) {
+              ret += it->ToString();
+              ret += "\n";
+            }
+            ret += "}\n";
+
+            ret += "Dataflow {\n";
+            for (auto &it : *dataflow_directives_) {
+              ret += it->ToString();
+              ret += "\n";
+            }
+            ret += "}\n";
+
+            return ret;
+          }
+
+        protected:
+
+          std::string GetName() {
+            return name_;
+          }
+
+          std::shared_ptr<std::vector<std::shared_ptr<LayerDimension>>> GetDimensions() {
+            return dimensions_;
+          }
+
+
+        private:
+
+
+
+      }; // End of class GEMMLayer
 
       class ConvLayer : public Layer {
         public:

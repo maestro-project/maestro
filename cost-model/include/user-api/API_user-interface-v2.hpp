@@ -28,17 +28,18 @@ Author : Hyoukjun Kwon (hyoukjun@gatech.edu)
 #include <memory>
 #include <vector>
 
+#include "AHW_noc-model.hpp"
 #include "option.hpp"
 
 #include "BASE_maestro-class.hpp"
 #include "BASE_base-objects.hpp"
 
+#include "TL_generic-csv-writer.hpp"
+
 #include "DFSL_parser.hpp"
 #include "DFSL_hw-parser.hpp"
 
 #include "DFA_tensor.hpp"
-
-#include "AHW-noc-model.hpp"
 
 #include "CA_cost-analysis-engine.hpp"
 #include "CA_cost-analysis-results.hpp"
@@ -112,7 +113,7 @@ namespace maestro {
         return configuration_->network_->GetName();
       }
 
-      std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>
+       std::shared_ptr<std::vector<std::shared_ptr<std::vector<std::shared_ptr<CA::CostAnalyisResults>>>>>
         AnalyzeNeuralNetwork(
             bool print_results_to_screen = false,
             bool print_results_to_file = false,
@@ -122,7 +123,7 @@ namespace maestro {
 
         int layer_id = 0;
         for(auto layer : *(configuration_->network_)) {
-          auto layer_results = AnalyzeCostAllClusters(layer_id, false, false);
+          auto layer_results = AnalyzeCostAllClusters(layer_id, print_results_to_screen, print_log_to_file);
 
           long num_macs = this->GetNumPartialSums(layer_id);
           layer_results->at(layer_results->size()-1)->UpdateTopNumComputations(num_macs);
@@ -268,8 +269,6 @@ namespace maestro {
           } else {
             assert(false);
           }
-
-
         }
 
         //Overall reuse factor
@@ -362,41 +361,6 @@ namespace maestro {
         costs[NumUtilizedPEs] = results->GetNumAvgActiveClusters();
       }
 
-      /*
-      //TODO: receive a list of tensor info
-      //TODO: Need to initialize a base TensorTable object and push it back to configuration_->tensors_
-      void AddCustomTensor(std::string tensor_name,
-                     DFA::TensorClass tensor_class,
-                     DataClass data_class,
-                     std::list<std::string>& coupled_vars) {
-        std::shared_ptr<std::list<std::string>> coupled_vars_to_be_added = std::make_shared<std::list<std::string>>();
-
-        for(auto var : coupled_vars) {
-          coupled_vars_to_be_added->push_back(var);
-        }
-
-        std::shared_ptr<DFA::Tensor> new_tensor = std::make_shared<DFA::Tensor>(tensor_name, tensor_class, data_class, coupled_vars_to_be_added);
-        configuration_->tensors_->AddTensor(new_tensor);
-      }
-
-      //From top cluster (global buffer side) to lower cluster (PE side)
-      void AddNoC(int bandwidth, int hops, int hop_latency, bool multicast_support, bool verbose = false) {
-        auto noc = std::make_shared<maestro::abstract_hw::NetworkOnChipModel>(bandwidth, hops, hop_latency, multicast_support);
-        configuration_->nocs_->push_back(noc);
-
-        if(verbose) {
-           std::cout << "Added a NoC at cluster level" << configuration_->nocs_->size() << std::endl;
-        }
-      }
-
-
-      int GetNumTopClusters(int layer_id) {
-        auto cluster_table = configuration_->cluster_analysis_->at(layer_id-1)->GetClusters();
-        return cluster_table->GetCluster(0)->GetNumClusters(false);
-      }
-
-      */
-
 
     protected:
       std::shared_ptr<ConfigurationV2> configuration_;
@@ -420,8 +384,8 @@ namespace maestro {
 
       void ParseHW() {
         if(configuration_->hw_file_name_ != "") {
-          DFSL::HWParser tmp_hw_parser(configuration_->hw_file_name_);
-          auto ret = tmp_hw_parser.ParseHW();
+          DFSL::HWParser hw_parser(configuration_->hw_file_name_);
+          auto ret = hw_parser.ParseHW();
           configuration_->num_pes_ = ret->num_pes_;
           configuration_->l1_size_ = ret->l1_size_;
           configuration_->l2_size_ = ret->l2_size_;
@@ -436,7 +400,6 @@ namespace maestro {
 
         }
       }
-
 
       void Setup(std::shared_ptr<maestro::DFA::Layer> layer)
       {
@@ -507,6 +470,12 @@ namespace maestro {
             }
             break;
           }
+          case (LayerType::GEMM): {
+            input_coupled_vars =  {"M", "K"};
+            weight_coupled_vars = {"K", "N"};
+            output_coupled_vars = {"M", "N"};
+            break;
+          }
           case (LayerType::CONV):
           default : {
             if(batch_processing) {
@@ -520,6 +489,7 @@ namespace maestro {
               output_coupled_vars = {"K", "Y", "X"};
             }
           }
+
         }
 
 
@@ -639,6 +609,13 @@ namespace maestro {
               }
               break;
             }
+            case (LayerType::GEMM) : {
+              for(auto dim : *dimensions) {
+                auto dimtbl_entry = std::make_shared<DFA::LayerDimension>(dim->GetName(), dim->GetSize(), dim->GetOuterStride(), dim->GetInnerStride());
+                dimension_table->AddDimension(dimtbl_entry);
+              }
+              break;
+            }
             default: {
             }
         }
@@ -661,7 +638,7 @@ namespace maestro {
         assert(noc_levels == configuration_->noc_multcast_->size());
 
         for(int noc_lv = 0; noc_lv < noc_levels; noc_lv++) {
-          auto noc = std::make_shared<maestro::abstract_hw::NetworkOnChipModel>(
+          auto noc = std::make_shared<maestro::AHW::NetworkOnChipModel>(
               configuration_->noc_bw_->at(noc_lv),
               1,
               configuration_->noc_latency_->at(noc_lv),
@@ -706,6 +683,16 @@ namespace maestro {
               }
               break;
             }
+            case (LayerType::GEMM): {
+              if(tensor_info_mapping_table_->find(layer_type) == tensor_info_mapping_table_->end()) {
+                tensor_info_idx = ConfigConvTensors(layer_type, false);
+                (*tensor_info_mapping_table_)[layer_type] = tensor_info_idx;
+              }
+              else {
+                tensor_info_idx = (*tensor_info_mapping_table_)[layer_type];
+              }
+              break;
+            }
             default: {
               //TODO: Add generic/custom dimension table construction
 //              dimension_table->AddOverlapDimensions(overlap_dim_list);
@@ -718,8 +705,6 @@ namespace maestro {
 
           message_printer_->PrintMsg(1, print_msg_0);
           message_printer_->PrintMsg(1, print_msg_1);
-
-          //std::cout << "Tensor info table index: " << tensor_info_idx << std::endl;
 
           auto cluster_analysis = std::make_shared<DFA::ClusterAnalysis>(
               layer_type, configuration_->num_pes_, configuration_->tensors_->at(tensor_info_idx),
