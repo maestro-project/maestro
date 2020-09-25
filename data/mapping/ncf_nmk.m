@@ -5,7 +5,7 @@ Constant KTileSz 100;
 Network ncf_gemm {
 Layer GEMM0 {
 Type: GEMM
-Dimensions { N: 128, K: 2048, M: 256}
+Dimensions { N: 128, K: 2048, M: 256 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -18,7 +18,7 @@ Dataflow {
 }
 Layer GEMM1 {
 Type: GEMM
-Dimensions { N: 64, K: 2048, M: 128}
+Dimensions { N: 64, K: 2048, M: 128 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -31,7 +31,7 @@ Dataflow {
 }
 Layer GEMM2 {
 Type: GEMM
-Dimensions { N: 256, K: 2048, M: 256}
+Dimensions { N: 256, K: 2048, M: 256 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -44,7 +44,7 @@ Dataflow {
 }
 Layer GEMM3 {
 Type: GEMM
-Dimensions { N: 256, K: 256, M: 2048}
+Dimensions { N: 256, K: 256, M: 2048 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -57,7 +57,7 @@ Dataflow {
 }
 Layer GEMM4 {
 Type: GEMM
-Dimensions { N: 256, K: 256, M: 2048}
+Dimensions { N: 256, K: 256, M: 2048 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -70,7 +70,7 @@ Dataflow {
 }
 Layer GEMM5 {
 Type: GEMM
-Dimensions { N: 128, K: 256, M: 2048}
+Dimensions { N: 128, K: 256, M: 2048 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -83,7 +83,7 @@ Dataflow {
 }
 Layer GEMM6 {
 Type: GEMM
-Dimensions { N: 256, K: 128, M: 2048}
+Dimensions { N: 256, K: 128, M: 2048 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -96,7 +96,7 @@ Dataflow {
 }
 Layer GEMM7 {
 Type: GEMM
-Dimensions { N: 128, K: 64, M: 2048}
+Dimensions { N: 128, K: 64, M: 2048 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -122,7 +122,7 @@ Dataflow {
 }
 Layer GEMM9 {
 Type: GEMM
-Dimensions { N: 1, K: 2048, M: 128}
+Dimensions { N: 1, K: 2048, M: 128 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -135,7 +135,7 @@ Dataflow {
 }
 Layer GEMM10 {
 Type: GEMM
-Dimensions { N: 1, K: 128, M: 2048}
+Dimensions { N: 1, K: 128, M: 2048 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -148,7 +148,7 @@ Dataflow {
 }
 Layer GEMM11 {
 Type: GEMM
-Dimensions { N: 128, K: 1, M: 2048}
+Dimensions { N: 128, K: 1, M: 2048 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;

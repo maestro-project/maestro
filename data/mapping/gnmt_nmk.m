@@ -1,7 +1,10 @@
+Constant MTileSz 1;
+Constant NTileSz 1;
+Constant KTileSz 100;
 Network gnmt_gemm {
 Layer GEMM0 {
 Type: GEMM
-Dimensions { N: 2048, K: 4096, M: 128}
+Dimensions { N: 2048, K: 4096, M: 128 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -27,7 +30,7 @@ Dataflow {
 }
 Layer GEMM2 {
 Type: GEMM
-Dimensions { N: 3072, K: 4096, M: 320}
+Dimensions { N: 3072, K: 4096, M: 320 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -40,7 +43,7 @@ Dataflow {
 }
 Layer GEMM3 {
 Type: GEMM
-Dimensions { N: 2048, K: 4096, M: 128}
+Dimensions { N: 2048, K: 4096, M: 128 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -53,7 +56,7 @@ Dataflow {
 }
 Layer GEMM4 {
 Type: GEMM
-Dimensions { N: 2048, K: 4096, M: 128}
+Dimensions { N: 2048, K: 4096, M: 128 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -66,7 +69,7 @@ Dataflow {
 }
 Layer GEMM5 {
 Type: GEMM
-Dimensions { N: 3072, K: 4096, M: 320}
+Dimensions { N: 3072, K: 4096, M: 320 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -79,7 +82,7 @@ Dataflow {
 }
 Layer GEMM6 {
 Type: GEMM
-Dimensions { N: 3072, K: 4096, M: 320}
+Dimensions { N: 3072, K: 4096, M: 320 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
@@ -92,7 +95,7 @@ Dataflow {
 }
 Layer GEMM7 {
 Type: GEMM
-Dimensions { N: 3072, K: 4096, M: 320}
+Dimensions { N: 3072, K: 4096, M: 320 }
 Dataflow {
 			TemporalMap(NTileSz,NTileSz) N; 
 			SpatialMap(MTileSz,MTileSz) M;
