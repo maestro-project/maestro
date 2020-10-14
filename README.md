@@ -8,7 +8,7 @@ MAESTRO is an open-source tool for modeling and evaluating the performance and e
 - [MAESTRO Docs](http://maestro.ece.gatech.edu/docs/build/html/index.html)
 
 # Notices
-### May 13th, 2020
+### Oct 13th, 2020
 
 We added a direct support for GEMM layers. For more information, please take a look at [here](http://maestro.ece.gatech.edu/docs/build/html/layer_supported.html).
 
