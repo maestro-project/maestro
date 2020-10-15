@@ -36,7 +36,7 @@ maestro
 
 # Generated datasets
 *.csv
-!tools/jupyter_notebook/*.csv
+!tools/jupyter_notebook/data/*.csv
 
 # SCONS temp files
 .sconsign*
