@@ -1,4 +1,5 @@
  Dataflow {
+     // This is an Eyeriss-like row-stationary dataflow” 
     SpatialMap(1,1) Y';
     TemporalMap(1,1) X';
     TemporalMap(1,1) C;

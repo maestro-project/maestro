@@ -1,4 +1,5 @@
 Dataflow {
+        // This is a NVDLA-like dataflow
         SpatialMap(1,1) K;
         TemporalMap(64,64) C;
         TemporalMap(Sz(R),Sz(R)) R;
