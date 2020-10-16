@@ -9,10 +9,12 @@ def draw_graph(df, y, x, color, figsize, legend, title, xlabel, ylabel, start_la
     else:
         df_new = df[start_layer:end_layer]
     my_plot = df_new.plot(kind='bar', y = y, x = x, color = color, figsize = figsize, legend = legend)
-    my_plot.set_title(title)
+    my_plot.set_title(title, fontsize=15)
     my_plot.set_xlabel(xlabel)
     my_plot.set_ylabel(ylabel)
+    my_plot.ticklabel_format(axis='y', scilimits=(-3,3))
     return my_plot
+
 
 def draw_two_graph(df1, df2, y, x, color, figsize, legend, title, xlabel, ylabel, start_layer, end_layer):
     df1.columns = df1.columns.str.strip()
@@ -26,8 +28,6 @@ def draw_two_graph(df1, df2, y, x, color, figsize, legend, title, xlabel, ylabel
         df2 = df2
     else:
         df2 = df2[start_layer:end_layer]
-    
-    fig, axes = plt.subplots(nrows=1, ncols=1)
 
     df1.plot(kind='Line', y = y, x = x, color = 'red', figsize = figsize, legend = legend, ax=axes)
     df2.plot(kind='Line', y = y, x = x, color = 'blue', figsize = figsize, legend = legend, ax=axes)
