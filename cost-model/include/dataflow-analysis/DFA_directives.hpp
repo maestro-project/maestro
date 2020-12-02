@@ -39,10 +39,7 @@ namespace maestro {
 				public:
 					virtual ~Directive() {}
 
-					virtual std::string ToString() {
-						std::string ret = "";
-						return ret;
-					}
+					virtual std::string ToString() = 0;
 
 					virtual void SetVariable(std::string new_var) {
 
@@ -104,10 +101,7 @@ namespace maestro {
 						return ClusterType::Invalid;
 					}
 
-					virtual std::string ToString() {
-						std::string ret = "Map " + variable_;
-						return ret;
-					}
+					virtual std::string ToString() override = 0;
 
           virtual void SetVariable(std::string new_var) {
             variable_ = new_var;
