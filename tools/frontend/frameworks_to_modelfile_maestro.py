@@ -85,9 +85,16 @@ if __name__ == "__main__":
         import torch
         import torchvision.models as models
         from helpers.torch_maestro_summary import summary
-
+        import sys, os
         device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-        model = getattr(models, opt.model)()
+        model = None
+        if opt.model == 'custom':
+            sys.path.insert(0,os.path.dirname(opt.custom))
+            fn = os.path.basename(opt.custom).split('.')[0]
+            new_module = __import__(fn, fromlist=[fn])
+            model = getattr(new_module, fn)()
+        else:
+            model = getattr(models, opt.model)()
         model = model.to(device)
         mae_summary = summary(model, INPUT_SIZE)
         with open("../../data/model/"+opt.outfile, "w") as fo:

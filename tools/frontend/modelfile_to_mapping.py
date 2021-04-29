@@ -13,10 +13,10 @@ if __name__ == "__main__":
     dsconv = 0
     base_path = '../../data/'
     if os.path.exists(base_path + 'model/' + opt.model_file):
-        with open('./dataflow/' + opt.dataflow + ".m" ,"r") as fd:
-            with open('./dataflow/'+ 'dpt.m' , "r") as fdpt:
+        with open('./dataflow/' + opt.dataflow + ".m" ,"r", encoding="utf8") as fd:
+            with open('./dataflow/'+ 'dpt.m' , "r", encoding="utf8") as fdpt:
                 with open(base_path + 'mapping/' + opt.outfile, "w") as fo:
-                    with open(base_path + 'model/' + opt.model_file, "r") as fm:
+                    with open(base_path + 'model/' + opt.model_file, "r", encoding="utf8") as fm:
                         for line in fm:
                             if(re.search("DSCONV",line)):
                                 dsconv = 1
