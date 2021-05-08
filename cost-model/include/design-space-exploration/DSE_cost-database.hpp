@@ -51,4 +51,37 @@ namespace maestro {
 }; // End of namespace maestro
 
 
+//Felix
+// ref:"https://www.tomshardware.com/news/bfloat16-deep-dive-arm-bf16-support-armv8-a,40305.html"
+// ref:"https://cacm.acm.org/magazines/2020/7/245701-domain-specific-hardware-accelerators/fulltext"
+//namespace maestro {
+//    namespace DSE {
+//        namespace cost {
+//            /* Embedded scaling model */
+//
+//            const double mac_area = 283;
+//            const double mac_power = 1.2223;
+//            const double mac_energy = 0.00023; // nJ; Caution, it's from external source!
+//
+//            const double sram_unit_size_64 = 1;
+//            const double sram_area_64 = 0.104;
+//            const double sram_power_64 = 0.00345;
+//
+//            const double sram_unit_size_32768 = 1;
+//            const double sram_area_32768 = 0.104;
+//            const double sram_power_32768 = 0.00345;
+//
+//            const double bus_unit_area = 101.7938;
+//            const double bus_unit_power = 0.8;
+//
+//            const double arbiter_unit_area = 395.473;
+//            const double arbiter_unit_power = 0.34;
+//
+//        }; // End of namespace scaling_model
+//    }; // End of namespace DSE
+//}; // End of namespace maestro
+////
+
+
+
 #endif

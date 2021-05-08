@@ -131,13 +131,56 @@ namespace maestro {
           ret->push_back(layer_results); // Take the top level cluster results
           layer_id++;
         }
-
+        //felix
+        long model_wise_total_l1_size = 0;
+        long model_wise_total_l2_size = 0;
+        long min_l1_size_req = 0;
+        long min_l2_size_req = 0;
+        //===
         //std::cout << "Output gen is complete" << std::endl;
         if(print_results_to_screen) {
           for(auto& layer_res : *ret) {
+            //felix
             auto upper_most_cluster_res = layer_res->at(layer_res->size()-1);
-            PrintAnalysisResultsSingleCluster(upper_most_cluster_res);
+            auto inner_most_cluster_res = layer_res->at(0);
+//            PrintAnalysisResultsSingleCluster(layer_res);
+            PrintAnalysisResultsSingleCluster(upper_most_cluster_res, inner_most_cluster_res);
+            //felix
+            auto layer_wise_total_l2_size = (upper_most_cluster_res->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Input) +
+                                        upper_most_cluster_res->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Output) +
+                                        upper_most_cluster_res->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Weight));
+            auto layer_wise_total_l1_size = (inner_most_cluster_res->GetBufferSizeReq(CA::BufferType::Downstream, DataClass::Input) +
+                                               inner_most_cluster_res->GetBufferSizeReq(CA::BufferType::Downstream, DataClass::Output) +
+                                               inner_most_cluster_res->GetBufferSizeReq(CA::BufferType::Downstream, DataClass::Weight));
+            model_wise_total_l2_size += layer_wise_total_l2_size;
+            model_wise_total_l1_size += layer_wise_total_l1_size;
+//            if(layer_wise_total_l1_size > configuration_->l1_size_) {
+//                  error_handler_->PrintErrorMsg(TL::ErrorCode::NotEnoughL1Buffer,std::to_string(layer_wise_total_l1_size), this->GetName());
+//                  error_handler_->TerminateProgram();
+//            }
+//            if(layer_wise_total_l2_size > configuration_->l2_size_) {
+//                  error_handler_->PrintErrorMsg(TL::ErrorCode::NotEnoughL2Buffer,std::to_string(layer_wise_total_l2_size), this->GetName());
+//                  error_handler_->TerminateProgram();
+//            }
+            if(layer_wise_total_l1_size > min_l1_size_req) {
+              min_l1_size_req = layer_wise_total_l1_size;
+            }
+            if(layer_wise_total_l2_size > min_l2_size_req) {
+              min_l2_size_req = layer_wise_total_l2_size;
+            }
+            //====
           }
+          //felix
+            if(min_l1_size_req > configuration_->l1_size_){
+              std::cout << "[WARNING] Per-layer L1 size requirement [" << min_l1_size_req << "] is larger than the given L1 size [" << configuration_->l1_size_ << "]"<< std::endl;
+            }
+            if(min_l2_size_req > configuration_->l2_size_){
+              std::cout << "[WARNING] Per-layer L2 size requirement [" << min_l2_size_req << "] is larger than the given L2 size [" << configuration_->l2_size_ << "]"<< std::endl;
+            }
+            std::cout << "[Model Summary]" << std::endl;
+            std::cout << "Model-wise total L2 size usage: " << model_wise_total_l2_size << std::endl;
+            std::cout << "Model-wise total L1 size usage: " << model_wise_total_l1_size << std::endl;
+          //====
         }
 
         if(print_results_to_file) {
@@ -389,10 +432,15 @@ namespace maestro {
           configuration_->num_pes_ = ret->num_pes_;
           configuration_->l1_size_ = ret->l1_size_;
           configuration_->l2_size_ = ret->l2_size_;
+          //felix
+          configuration_->offchip_bw_= ret->off_chip_bw_;
+          //=====
+
           configuration_->noc_bw_->at(0) = ret->noc_bw_;
           configuration_->noc_bw_->at(1) = ret->noc_bw_;
           configuration_->noc_bw_->at(2) = ret->noc_bw_;
           configuration_->noc_bw_->at(3) = ret->noc_bw_;
+
           configuration_->noc_latency_->at(0) = ret->noc_hops_;
           configuration_->noc_latency_->at(1) = ret->noc_hops_;
           configuration_->noc_latency_->at(2) = ret->noc_hops_;
@@ -744,8 +792,9 @@ namespace maestro {
         }
 */
         if(print_results) {
-          auto top_cluster_res = results->at(results->size()-1);
-          PrintAnalysisResultsSingleCluster(top_cluster_res);
+          //felix
+//            auto top_cluster_res = results->at(results->size()-1);
+//          PrintAnalysisResultsSingleCluster(top_cluster_res);
         }
 /*
         if(show_all_cluster_results && print_results) {
@@ -990,7 +1039,7 @@ namespace maestro {
 
 
 
-      void PrintAnalysisResultsSingleCluster(std::shared_ptr<CA::CostAnalyisResults> results) {
+      void PrintAnalysisResultsSingleCluster(std::shared_ptr<CA::CostAnalyisResults> results, std::shared_ptr<CA::CostAnalyisResults> inner_results) {
         std::cout << std::endl;
         std::cout << std::endl;
 
@@ -1025,6 +1074,11 @@ namespace maestro {
         long total_l1_write = 0;
         long total_l1_read = 0;
 
+        //felix
+        long total_l1_size = 0;
+        long total_l2_size = 0;
+        //==========
+
         auto layer_type = results->GetLayerType();
         int tensor_info_idx = (*tensor_info_mapping_table_)[layer_type];
 
@@ -1033,7 +1087,7 @@ namespace maestro {
 
           std::cout << "Tensor " << tensor->GetTensorName() << std::endl;
           std::cout << "L2 size requirement: " << results->GetBufferSizeReq(CA::BufferType::Upstream, dataclass) << std::endl;
-          std::cout << "L1 size requirement: " << results->GetBufferSizeReq(CA::BufferType::Downstream, dataclass) << std::endl;
+          std::cout << "L1 size requirement: " << inner_results->GetBufferSizeReq(CA::BufferType::Downstream, dataclass) << std::endl;
 
           std::cout << "L2 buffer write: "
               << results->GetBufferAccessCount(CA::BufferType::Upstream, CA::BufferAccessType::Write, dataclass) << std::endl;
@@ -1049,7 +1103,12 @@ namespace maestro {
 
           total_l1_write += results->GetBufferAccessCount(CA::BufferType::Downstream, CA::BufferAccessType::Write, dataclass);
           total_l1_read += results->GetBufferAccessCount(CA::BufferType::Downstream, CA::BufferAccessType::Read, dataclass);
+          //felix
+          total_l2_size += results->GetBufferSizeReq(CA::BufferType::Upstream, dataclass);
+          total_l1_size += inner_results->GetBufferSizeReq(CA::BufferType::Downstream, dataclass);
+          //====
         }
+
 
         std::cout << "Overall data reuse factor: " << static_cast<double>(total_l1_read) / static_cast<double>(total_l1_write);
 
@@ -1088,7 +1147,11 @@ namespace maestro {
         std::cout << std::endl;
 
         std::cout << "[Summary]" << std::endl;
-        std::cout << "TotalL2 buffer write energy: " << l2_write_energy << " X MAC energy" << std::endl;
+        //felix
+        std::cout << "Total L2 buffer requirement: " << total_l2_size << std::endl;
+        std::cout << "Total L1 buffer requirement: " << total_l1_size << std::endl;
+        //====
+        std::cout << "Total L2 buffer write energy: " << l2_write_energy << " X MAC energy" << std::endl;
         std::cout << "Total L2 buffer read energy: " << l2_read_energy << " X MAC energy" << std::endl;
         std::cout << "Total L1 buffer write energy: " << l1_write_energy << " X MAC energy" << std::endl;
         std::cout << "Total L1 buffer read energy: " << l1_read_energy << " X MAC energy" << std::endl;

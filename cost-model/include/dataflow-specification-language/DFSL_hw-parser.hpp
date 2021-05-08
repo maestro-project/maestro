@@ -53,7 +53,10 @@ namespace maestro {
                               NoCBWIdentifier,
                               NoCBWValue,
                               NoCNumHopsIdentifier,
-                              NoCNumHopsValue
+                              NoCNumHopsValue,
+                              //felix
+                              OffChipBWIdentifier,
+                              OffChipBWValue
                            };
 
     class HWConfig : public MAESTROClass {
@@ -63,6 +66,8 @@ namespace maestro {
         int l2_size_ = 2;
         int noc_bw_ = 1;
         int noc_hops_ = 1;
+        //felix
+        int off_chip_bw_ = -1;
     };
 
     class HWParser : public InputParser {
@@ -102,6 +107,10 @@ namespace maestro {
                   else if(tkn == DFSL::tmp_noc_hops_decl_) {
                     state_ = HWParserState::NoCNumHopsIdentifier;
                   }
+                  //felix
+                  else if(tkn == DFSL::tmp_offchip_bw_decl_) {
+                    state_ = HWParserState::OffChipBWIdentifier;
+                  }
                   else {
                     ParseError(line_number);
                   }
@@ -138,7 +147,12 @@ namespace maestro {
                   state_ = HWParserState::Idle;
                   break;
                 }
-
+                //felix
+                case HWParserState::OffChipBWIdentifier: {
+                  ret->off_chip_bw_ = std::atoi(tkn.c_str());
+                  state_ = HWParserState::Idle;
+                  break;
+                }
 
                 default: {
                   ParseError(line_number);

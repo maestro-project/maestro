@@ -85,12 +85,14 @@ namespace maestro {
     const std::string dataflow_cluster_type_physical_ = "P";
 
     /* Tmp HW parser */
-    const std::string tmp_num_pes_decl_ = "NumPEs";
-    const std::string tmp_l1size_decl_ = "L1Size";
-    const std::string tmp_l2size_decl_ = "L2Size";
-    const std::string tmp_noc_bw_decl_ = "NoC_BW";
+    const std::string tmp_num_pes_decl_ = "num_pes";
+    const std::string tmp_l1size_decl_ = "l1_size_cstr";
+    const std::string tmp_l2size_decl_ = "l2_size_cstr";
+    const std::string tmp_noc_bw_decl_ = "noc_bw_cstr";
     const std::string tmp_noc_hops_decl_ = "NoC_NumHops";
-
+    //felix
+    const std::string tmp_offchip_bw_decl_ = "offchip_bw_cstr";
+    //====
 
     /* Hardware Resource Description */
     const std::string accelerator_decl_ = "Accelerator";

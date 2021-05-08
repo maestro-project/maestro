@@ -37,9 +37,9 @@ namespace maestro {
     public:
       /* Default values : Models MAERI with VGG16 and 64 multiplier switches*/
       int np = 7;
-      int bw = 32;
+      int bw = 70000;
       int hops = 1;
-      int hop_latency = 1;
+      int hop_latency = 0;
       bool mc = true;
       bool top_bw_only = false;
       bool bw_sweep = false;
@@ -54,15 +54,15 @@ namespace maestro {
       std::string hw_file_name = "";
 
 
-      int num_simd_lanes = 9;
+      int num_simd_lanes = 1;
       bool do_reduction = true;
       bool do_implicit_reduction = true;
       bool fg_sync = false;
 
       bool do_dse = true;
       bool do_print_ds = false;
-      int l1_size = 1024;
-      int l2_size = 16384;
+      int l1_size = 2147483647;
+      int l2_size = 2147483647;
       int min_num_pes = 1024;
       int min_noc_bw = 512;
       int max_num_pes = 1024;
@@ -78,6 +78,8 @@ namespace maestro {
       int message_print_lv = 0;
       int pe_tick = 4;
       int bw_tick = 4;
+      //felix
+      int offchip_bw = 70000;
 
 
       bool parse(int argc, char** argv)
@@ -103,7 +105,9 @@ namespace maestro {
 
           po::options_description nocs("Network on chip options");
           nocs.add_options()
-            ("noc_bw", po::value<int>(&bw), "the bandwidth of NoC")
+            //felix
+            ("offchip_bw_cstr", po::value<int>(&offchip_bw), "the bandwidth of Off-Chip")
+            ("noc_bw_cstr", po::value<int>(&bw), "the bandwidth of NoC")
             ("noc_hops", po::value<int>(&hops), "the average number of NoC hops")
             ("noc_hop_latency", po::value<int>(&hop_latency), "the latency for each of NoC hop")
             ("noc_mc_support", po::value<bool>(&mc), "the multicasting capability of NoC")
@@ -131,8 +135,8 @@ namespace maestro {
             ("verbose", po::value<bool>(&verbose), "Printout intermediate results")
             ("print_design_space", po::value<bool>(&print_design_space_to_file), "Print out the valid design space into an output file")
             ("print_space", po::value<bool>(&do_print_ds), "Print out entire design space into a file")
-            ("l1_size", po::value<int>(&l1_size), "L1 memory size in Bytes")
-            ("l2_size", po::value<int>(&l2_size), "L2 memory size in Bytes")
+            ("l1_size_cstr", po::value<int>(&l1_size), "L1 memory size in Bytes")
+            ("l2_size_cstr", po::value<int>(&l2_size), "L2 memory size in Bytes")
             ("min_num_PEs", po::value<int>(&min_num_pes), "The max number of PEs during DSE")
             ("min_noc_bw", po::value<int>(&min_noc_bw), "The maximum noc bandwidth during DSE")
             ("max_num_PEs", po::value<int>(&max_num_pes), "The max number of PEs during DSE")

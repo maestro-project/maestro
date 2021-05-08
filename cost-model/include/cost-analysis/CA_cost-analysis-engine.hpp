@@ -135,7 +135,9 @@ namespace maestro {
           /* Cost stats */
           long peak_noc_bw_req = 0;
           long double avg_noc_bw_req = 0;
-
+          //felix
+          long off_chip_bw_req = 0;
+          //
           long double delays[static_cast<int>(DelayType::NumDelayTypes)][static_cast<int>(ValueType::NumValTypes)];
           for(int i = 0; i < static_cast<int>(DelayType::NumDelayTypes); i++) {
             delays[i][static_cast<int>(ValueType::Min)] = std::numeric_limits<long double>::max();
@@ -201,13 +203,13 @@ namespace maestro {
             }
 
 
-            if(num_partial_sums <= 0) {
-              std::cout << "Num partial sums is less than 0!" << std::endl;
-              if(write_log_file && cluster_idx <= print_cluster_lv) {
-                log_file << "Skipping Invalid case" << std::endl;
-              }
-              continue;
-            }
+//            if(num_partial_sums <= 0) {
+//              std::cout << "Num partial sums is less than 0!" << std::endl;
+//              if(write_log_file && cluster_idx <= print_cluster_lv) {
+//                log_file << "Skipping Invalid case" << std::endl;
+//              }
+//              continue;
+//            }
 
 
             for(auto& tensor : *input_tensors) {
@@ -331,7 +333,22 @@ namespace maestro {
             else {
               outstanding_delay = (do_double_buffering)? std::max( egress_comm_delay, std::max(computation_delay, ingress_comm_delay)) : ingress_comm_delay + computation_delay + egress_comm_delay;
             }
-
+            //felix
+            if(cluster_idx == 0){
+              auto out_buffer_delay = (results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Output))/configs_->offchip_bw_;
+              auto in_buffer_delay = (results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Input) + results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Weight))/configs_->offchip_bw_;
+              auto ingress_offchip_delay = (do_double_buffering)?in_buffer_delay/2:in_buffer_delay;
+              auto egress_offchip_delay = (do_double_buffering)?out_buffer_delay/2:out_buffer_delay;
+              outstanding_delay =  (do_double_buffering)?std::max(ingress_offchip_delay, std::max(outstanding_delay, egress_offchip_delay)): outstanding_delay + ingress_offchip_delay + egress_offchip_delay;
+              //felix
+              off_chip_bw_req = std::max(off_chip_bw_req, results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Output)/outstanding_delay);
+              off_chip_bw_req = std::max(off_chip_bw_req, (results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Input) + results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Weight))/outstanding_delay);
+              off_chip_bw_req = (do_double_buffering)?off_chip_bw_req/2:off_chip_bw_req;
+              //
+              //felix
+              results->UpdateOffchipBWReq(off_chip_bw_req);
+            }
+            //
             results->UpdateRuntime(results->GetRuntime(CA::EstimationType::Exact) + num_case_occurrences * outstanding_delay, CA::EstimationType::Exact);
             results->UpdateNumComputations(results->GetNumComputations() + num_case_occurrences * tensor_spatial_partial_sum_mapping_size);
 
@@ -721,7 +738,6 @@ namespace maestro {
            auto input_tensors = tensors_->GetTensorsInClass(DFA::TensorClass::InputTensor);
 
            int buffer_size_mult = do_double_buffering? 2 : 1;
-
            for(auto& tensor : *input_tensors) {
              auto dataclass = tensor->GetDataClass();
              auto coupled_vars = tensor->GetCoupledVariables();
@@ -741,7 +757,6 @@ namespace maestro {
              auto downstream_buffer_req = reuse_analysis->GetMappedVolume(tensor);
              auto prev_downstream_buffer_req = results->GetBufferSizeReq(BufferType::Downstream, tensor->GetDataClass());
              results->UpdateBufferSizeReq(BufferType::Downstream, prev_downstream_buffer_req + buffer_size_mult * downstream_buffer_req, dataclass);
-
            }
 
            for(auto& tensor : *output_tensors) {
@@ -764,19 +779,21 @@ namespace maestro {
 
              auto upstream_buffer_req = reuse_analysis->GetSpatialEgressTraffic(tensor, iter_status);
              results->UpdateBufferSizeReq(BufferType::Upstream, buffer_size_mult * upstream_buffer_req, dataclass);
-             if(cluster_idx == 0 && buffer_size_mult * upstream_buffer_req > configs_->l2_size_) {
-               error_handler_->PrintErrorMsg(TL::ErrorCode::NotEnoughL2Buffer,std::to_string(buffer_size_mult * upstream_buffer_req), this->GetName());
-               error_handler_->TerminateProgram();
-             }
+             //felix
+//             if(cluster_idx ==0 && buffer_size_mult * upstream_buffer_req > configs_->l2_size_) {
+//               error_handler_->PrintErrorMsg(TL::ErrorCode::NotEnoughL2Buffer,std::to_string(buffer_size_mult * upstream_buffer_req), this->GetName());
+//               error_handler_->TerminateProgram();
+//             }
 
              results->UpdateBufferAccessCount(BufferType::Upstream, BufferAccessType::Read, size, dataclass);
 
              auto downstream_buffer_req = reuse_analysis->GetMappedVolume(tensor);
              results->UpdateBufferSizeReq(BufferType::Downstream, buffer_size_mult * downstream_buffer_req, dataclass);
-             if(cluster_idx == num_cluster_lvs -1 && buffer_size_mult * downstream_buffer_req > configs_->l1_size_) {
-               error_handler_->PrintErrorMsg(TL::ErrorCode::NotEnoughL1Buffer,std::to_string(buffer_size_mult * downstream_buffer_req), this->GetName());
-               error_handler_->TerminateProgram();
-             }
+             //felix
+//             if(cluster_idx == num_cluster_lvs -1 && buffer_size_mult * downstream_buffer_req > configs_->l1_size_) {
+//               error_handler_->PrintErrorMsg(TL::ErrorCode::NotEnoughL1Buffer,std::to_string(buffer_size_mult * downstream_buffer_req), this->GetName());
+//               error_handler_->TerminateProgram();
+//             }
            }
         }
 
