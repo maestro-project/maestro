@@ -229,6 +229,8 @@ namespace maestro {
                    << "," << num_inputs << "," << num_weights << "," << ops_per_joule << "," << num_partial_sums
                    << "," << pe_power << "," << l1_power << "," << l2_power << "," << noc_power << ",";
           //
+
+
           for(auto& tensor : *maestro_config->tensors_->at(tensor_idx)) {
             auto dataclass = tensor->GetDataClass();
 

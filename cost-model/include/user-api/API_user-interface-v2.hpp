@@ -171,15 +171,23 @@ namespace maestro {
             //====
           }
           //felix
-            if(min_l1_size_req > configuration_->l1_size_){
-              std::cout << "[WARNING] Per-layer L1 size requirement [" << min_l1_size_req << "] is larger than the given L1 size [" << configuration_->l1_size_ << "]"<< std::endl;
-            }
-            if(min_l2_size_req > configuration_->l2_size_){
-              std::cout << "[WARNING] Per-layer L2 size requirement [" << min_l2_size_req << "] is larger than the given L2 size [" << configuration_->l2_size_ << "]"<< std::endl;
-            }
-            std::cout << "[Model Summary]" << std::endl;
-            std::cout << "Model-wise total L2 size usage: " << model_wise_total_l2_size << std::endl;
-            std::cout << "Model-wise total L1 size usage: " << model_wise_total_l1_size << std::endl;
+          bool pass=true;
+          std::cout << "Buffer Analysis:"<<std::endl;
+          if(min_l1_size_req > configuration_->l1_size_){
+            std::cout << "[WARNING:Buffer] Per-layer L1 size requirement [" << min_l1_size_req << "] is larger than the given L1 size [" << configuration_->l1_size_ << "]"<< std::endl;
+            pass= false;
+          }
+          if(min_l2_size_req > configuration_->l2_size_){
+            std::cout << "[WARNING:Buffer] Per-layer L2 size requirement [" << min_l2_size_req << "] is larger than the given L2 size [" << configuration_->l2_size_ << "]"<< std::endl;
+            pass= false;
+          }
+          if(pass==true) {
+            std::cout << "[PASS]" << std::endl;
+          }
+          std::cout << "[Model-wise Buffer Summary]" << std::endl;
+          std::cout << "Model-wise total L2 size usage: " << model_wise_total_l2_size << std::endl;
+          std::cout << "Model-wise total L1 size usage: " << model_wise_total_l1_size << std::endl;
+
           //====
         }
 
@@ -858,6 +866,8 @@ namespace maestro {
         int num_bottom_clusters = 0;
 
         int layer_id = 1;
+        long max_noc_bw_req = 0;
+        long max_offchip_bw_req = 0;
         for(auto& layer_res : *analysis_result) {
           LayerType layer_type;
           int cluster_lv = 0;
@@ -1030,9 +1040,34 @@ namespace maestro {
 
           csv_writer->WriteDesignPoint(configuration_, tensor_info_idx, layer_dp, GetNetworkName(), layer_name, num_psums, input_tensor_size, weight_tensor_size, ops_per_joule, pe_power, l1_power, l2_power, noc_power, top_res);
 
+          //felix
+          if( top_res->GetPeakBWReq() > max_noc_bw_req){
+            max_noc_bw_req = top_res->GetPeakBWReq();
+          }
+          if( top_res->GetOffchipBWReq() > max_offchip_bw_req){
+            max_offchip_bw_req = top_res->GetOffchipBWReq();
+          }
+          //
+
           layer_id++;
 
         }
+
+        //felix
+        bool pass=true;
+        std::cout << "BW Analysis:"<<std::endl;
+        if( max_noc_bw_req > configuration_->noc_bw_->at(0)){
+          std::cout << "[WARNING:BW] Per-layer NoC BW requirement [" << max_noc_bw_req << "] is larger than the given NoC BW [" <<  configuration_->noc_bw_->at(0)<< "]"<< std::endl;
+          pass=false;
+        }
+        if( max_offchip_bw_req > configuration_->offchip_bw_){
+          std::cout << "[WARNING:BW] Per-layer OffChip BW requirement [" << max_offchip_bw_req << "] is larger than the given OffChip BW [" << configuration_->offchip_bw_ << "]"<< std::endl;
+          pass=false;
+        }
+        if(pass==true){
+          std::cout << "[PASS]"<<std::endl;
+        }
+        //
 
 
       }
