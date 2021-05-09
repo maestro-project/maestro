@@ -62,12 +62,12 @@ namespace maestro {
     class HWConfig : public MAESTROClass {
       public:
         int num_pes_ = 1;
-        int l1_size_ = 1;
-        int l2_size_ = 2;
-        int noc_bw_ = 1;
+        int l1_size_ = 2147483647;
+        int l2_size_ = 2147483647;
+        int noc_bw_ = 70000;
         int noc_hops_ = 1;
         //felix
-        int off_chip_bw_ = -1;
+        int off_chip_bw_ = 70000;
     };
 
     class HWParser : public InputParser {

@@ -341,8 +341,8 @@ namespace maestro {
               auto egress_offchip_delay = (do_double_buffering)?out_buffer_delay/2:out_buffer_delay;
               outstanding_delay =  (do_double_buffering)?std::max(ingress_offchip_delay, std::max(outstanding_delay, egress_offchip_delay)): outstanding_delay + ingress_offchip_delay + egress_offchip_delay;
               //felix
-              off_chip_bw_req = std::max(off_chip_bw_req, results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Output)/outstanding_delay);
-              off_chip_bw_req = std::max(off_chip_bw_req, (results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Input) + results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Weight))/outstanding_delay);
+              off_chip_bw_req = std::max(off_chip_bw_req, results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Output)/computation_delay);
+              off_chip_bw_req = std::max(off_chip_bw_req, (results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Input) + results->GetBufferSizeReq(CA::BufferType::Upstream, DataClass::Weight))/computation_delay);
               off_chip_bw_req = (do_double_buffering)?off_chip_bw_req/2:off_chip_bw_req;
               //
               //felix
