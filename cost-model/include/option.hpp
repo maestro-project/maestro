@@ -37,7 +37,7 @@ namespace maestro {
     public:
       /* Default values : Models MAERI with VGG16 and 64 multiplier switches*/
       int np = 7;
-      int bw = 70000;
+      int bw = INT_MAX;
       int hops = 1;
       int hop_latency = 0;
       bool mc = true;
@@ -61,8 +61,8 @@ namespace maestro {
 
       bool do_dse = true;
       bool do_print_ds = false;
-      int l1_size = 2147483647;
-      int l2_size = 2147483647;
+      int l1_size = INT_MAX;
+      int l2_size = INT_MAX;
       int min_num_pes = 1024;
       int min_noc_bw = 512;
       int max_num_pes = 1024;

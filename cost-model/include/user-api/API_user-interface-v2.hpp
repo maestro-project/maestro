@@ -181,7 +181,7 @@ namespace maestro {
             std::cout << "[WARNING:Buffer] Per-layer L2 size requirement [" << min_l2_size_req << "] is larger than the given L2 size [" << configuration_->l2_size_ << "]"<< std::endl;
             pass= false;
           }
-          if(pass==true) {
+          if(pass) {
             std::cout << "[PASS]" << std::endl;
           }
           std::cout << "[Model-wise Buffer Summary]" << std::endl;
