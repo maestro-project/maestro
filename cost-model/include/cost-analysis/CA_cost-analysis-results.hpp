@@ -190,6 +190,9 @@ namespace maestro {
         long GetPeakBWReq() {
           return peak_bw_req_;
         }
+        long GetOffchipBWReq() {
+          return offchip_bw_req_;
+        }
 
         double GetAvgBWReq() {
           return avg_bw_req_;
@@ -213,6 +216,9 @@ namespace maestro {
 
         void UpdatePeakBWReq(long bw_req) {
           peak_bw_req_ = bw_req;
+        }
+        void UpdateOffchipBWReq(long bw_req) {
+          offchip_bw_req_ = bw_req;
         }
 
         void UpdateAvgBWReq(double avg_bw_req) {
@@ -301,7 +307,8 @@ namespace maestro {
 
         long peak_bw_req_ = 0;
         double avg_bw_req_ = 0;
-
+        //felix
+        long offchip_bw_req_ = 0;
         long num_computations_ = 0;
         long top_level_num_computations_ = 0;
       private:

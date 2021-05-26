@@ -86,12 +86,14 @@ namespace maestro {
           int simd_width,
           int top_noc_bw,
           int l1_sram_byte_size,
-          int l2_sram_byte_size) :
+          int l2_sram_byte_size,
+          int offchip_bw) :
         dfsl_file_name_(dfsl_file_name),
         hw_file_name_(hw_file_name),
         noc_multcast_(noc_multcast),
         noc_latency_(noc_latency),
         noc_bw_(noc_bw),
+        offchip_bw_(offchip_bw),
         num_pes_(num_pes),
         simd_width_(simd_width),
         l1_size_(l1_sram_byte_size),
@@ -126,6 +128,7 @@ namespace maestro {
       int simd_width_;
       int l1_size_;
       int l2_size_;
+      int offchip_bw_;
   }; // End of class Configuration
 
 

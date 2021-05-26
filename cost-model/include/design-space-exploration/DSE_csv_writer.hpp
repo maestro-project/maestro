@@ -56,7 +56,7 @@ namespace maestro {
 
           if(!file_exists) {
             outfile_ << "Neural Network Name, Layer Number, NumPEs, Runtime (Cycles), Activity count-based Energy (nJ), Throughput (MACs/Cycle), Throughput Per Energy (GMACs/s*J), " <<
-                        "Area, Power, NoC BW (Elements/cycle), Avg BW Req, Peak BW Req, Vector Width,  L2 SRAM Size (Bytes), L1 SRAM Size (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
+                        "Area, Power, NoC BW Req (Elements/cycle), Avg BW Req, Peak BW Req, Offchip BW Req (Elements/cycle), Vector Width,  L2 SRAM Size Req (Bytes), L1 SRAM Size Req (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
                      << "Num Total Input Pixels, Num Total Weight Pixels, Ops/J, Num MACs, PE power, L1 power, L2 power, NOC power, ";
 
             for(auto& tensor : *maestro_config->tensors_) {
@@ -83,7 +83,7 @@ namespace maestro {
 
           if(!file_exists) {
             outfile_ << "Neural Network Name, Layer Number, NumPEs, Runtime (Cycles), Activity count-based Energy (nJ), Throughput (MACs/Cycle), Throughput Per Energy (GMACs/s*J), " <<
-                        "Area, Power, NoC BW (Elements/cycle), Avg BW Req, Peak BW Req, Vector Width,  L2 SRAM Size (Bytes), L1 SRAM Size (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
+                        "Area, Power, NoC BW Req (Elements/cycle), Avg BW Req, Peak BW Req, Vector Width, Offchip BW Req (Elements/cycle),  L2 SRAM Size Req (Bytes), L1 SRAM Size Req (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
                      << "Num Total Input Pixels, Num Total Weight Pixels, Ops/J, Num MACs, PE power, L1 power, L2 power, NOC power, ";
 
             for(auto& tensor : *maestro_config->tensors_->at(0)) { // TODO: fix this hard-coded part ( at(0) )
@@ -111,7 +111,7 @@ namespace maestro {
 
           if(!file_exists) {
             outfile_ << "Neural Network Name, Layer Number, NumPEs, Runtime (Cycles), Activity count-based Energy (nJ), Throughput (MACs/Cycle), Throughput Per Energy (GMACs/s*J), " <<
-                        "Area, Power, NoC BW (Elements/cycle), Avg BW Req, Peak BW Req, Vector Width,  L2 SRAM Size (Bytes), L1 SRAM Size (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
+                        "Area, Power, NoC BW Req (Elements/cycle), Avg BW Req, Peak BW Req, Vector Width, Offchip BW Req (Elements/cycle),  L2 SRAM Size Req (Bytes), L1 SRAM Size Req (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
                      << "Num Total Input Pixels, Num Total Weight Pixels, Ops/J, Num MACs, PE power, L1 power, L2 power, NOC power" << std::endl;
           }
 
@@ -127,7 +127,7 @@ namespace maestro {
 
           if(!file_exists) {
             outfile_ << "NumPEs, Runtime (Cycles), Activity count-based Energy (nJ), Throughput (MACs/Cycle), Throughput Per Energy (GMACs/s*J), "
-                     << "Area, Power, (Elements/cycle), Avg BW Req, Peak BW Req, Vector Width,  L2 SRAM Size (Bytes), L1 SRAM Size (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
+                     << "Area, Power, (Elements/cycle), Avg BW Req, Peak BW Req, Vector Width, Offchip BW Req (Elements/cycle),  L2 SRAM Size (Bytes), L1 SRAM Size (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
                      << " Num Total Input Pixels, Num Total Weight Pixels, Ops/J, Num MACs, PE power, L1 power, L2 power, NOC power" << std::endl;
           }
 
@@ -141,7 +141,7 @@ namespace maestro {
 
           if(!file_exists) {
             outfile_ << "NumPEs, Runtime (Cycles), Activity count-based Energy (nJ), Throughput (MACs/Cycle), Throughput Per Energy (GMACs/s*J), "
-                     << "Area, Power, NoC BW (Elements/cycle), Avg BW Req, Peak BW Req, Vector Width,  L2 SRAM Size (Bytes), L1 SRAM Size (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
+                     << "Area, Power, NoC BW Req (Elements/cycle), Avg BW Req, Peak BW Req, Vector Width, Offchip BW Req (Elements/cycle),  L2 SRAM Size Req (Bytes), L1 SRAM Size Req (Bytes), Multicasting Factor (Weight), Multicasting Factor (Input), "
                      << " Num Total Input Pixels, Num Total Weight Pixels, Ops/J, Num MACs, PE power, L1 power, L2 power, NOC power";
 
             for(auto& tensor : * maestro_config->tensors_) {
@@ -217,11 +217,19 @@ namespace maestro {
             double ops_per_joule, double pe_power, double l1_power, double l2_power,
             double noc_power, std::shared_ptr<CA::CostAnalyisResults> cost_analysis_results) {
           double throughput =  static_cast<double>(num_partial_sums)/ static_cast<double>(dp->runtime_);
+//          outfile_ << nn_name << "," << layer_name << "," << dp->num_pes_ << "," << dp->runtime_ << "," << dp->energy_ << "," << throughput << ","  << dp->performance_per_energy_
+//                   << "," << dp->area_ << "," << dp->power_ << "," << dp->noc_bw_ << "," << cost_analysis_results->GetAvgBWReq() << "," << cost_analysis_results->GetPeakBWReq() << "," << dp->vector_width_ << "," << dp->l2_sram_sz << ","
+//                   <<  dp->l1_sram_sz << "," << dp->GetMulticastingFactor("weight") << "," << dp->GetMulticastingFactor("input")
+//                   << "," << num_inputs << "," << num_weights << "," << ops_per_joule << "," << num_partial_sums
+//                   << "," << pe_power << "," << l1_power << "," << l2_power << "," << noc_power << ",";
+          //felix
           outfile_ << nn_name << "," << layer_name << "," << dp->num_pes_ << "," << dp->runtime_ << "," << dp->energy_ << "," << throughput << ","  << dp->performance_per_energy_
-                   << "," << dp->area_ << "," << dp->power_ << "," << dp->noc_bw_ << "," << cost_analysis_results->GetAvgBWReq() << "," << cost_analysis_results->GetPeakBWReq() << "," << dp->vector_width_ << "," << dp->l2_sram_sz << ","
+                   << "," << dp->area_ << "," << dp->power_ << "," << cost_analysis_results->GetPeakBWReq() << "," << cost_analysis_results->GetAvgBWReq() << "," << cost_analysis_results->GetPeakBWReq() << "," << dp->vector_width_ << "," << cost_analysis_results->GetOffchipBWReq() << "," << dp->l2_sram_sz << ","
                    <<  dp->l1_sram_sz << "," << dp->GetMulticastingFactor("weight") << "," << dp->GetMulticastingFactor("input")
                    << "," << num_inputs << "," << num_weights << "," << ops_per_joule << "," << num_partial_sums
                    << "," << pe_power << "," << l1_power << "," << l2_power << "," << noc_power << ",";
+          //
+
 
           for(auto& tensor : *maestro_config->tensors_->at(tensor_idx)) {
             auto dataclass = tensor->GetDataClass();

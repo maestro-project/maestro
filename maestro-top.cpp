@@ -106,7 +106,8 @@ int main(int argc, char** argv)
           option.num_simd_lanes,
           option.bw,
           option.l1_size,
-          option.l2_size
+          option.l2_size,
+          option.offchip_bw
           );
 
       auto api = std::make_shared<maestro::APIV2>(config);
@@ -118,6 +119,8 @@ int main(int argc, char** argv)
     std::shared_ptr<std::vector<bool>> noc_multcast = std::make_shared<std::vector<bool>>();
     std::shared_ptr<std::vector<int>> noc_latency = std::make_shared<std::vector<int>>();
     std::shared_ptr<std::vector<int>> noc_bw = std::make_shared<std::vector<int>>();
+
+    //felix
 
     noc_bw->push_back(option.bw);
     noc_bw->push_back(option.bw);
@@ -145,7 +148,8 @@ int main(int argc, char** argv)
         option.num_simd_lanes,
         option.bw,
         option.l1_size,
-        option.l2_size
+        option.l2_size,
+        option.offchip_bw
         );
 
     auto api = std::make_shared<maestro::APIV2>(config);

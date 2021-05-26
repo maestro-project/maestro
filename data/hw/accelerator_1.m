@@ -1,5 +1,5 @@
-NumPEs: 256
-L1Size: 512
-L2Size: 32768
-NoC_BW: 1024
-NoC_NumHops: 1
+num_pes: 256
+l1_size_cstr: 100
+l2_size_cstr: 3000
+noc_bw_cstr: 1000
+offchip_bw_cstr: 50

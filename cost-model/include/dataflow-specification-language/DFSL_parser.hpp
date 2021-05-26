@@ -58,6 +58,8 @@ namespace maestro {
 		                       PE_Decl, PE_Identifier, PE_Body, PE_NumPE, PE_VectorWidth, PE_MultPrecision, PE_AddPrecision,
 		                       Buffer_Decl, Buffer_Identifier, Buffer_Body, Buffer_Size, Buffer_L2, Buffer_L1,
 		                       Noc_Decl, NoC_Identifier, NoC_Name, Noc_Name_Identifier, SubNoC_Body, NoC_Body, NoC_BW, NoC_Latency,
+		                       //felix
+		                       OffChip_BW
 		                       };
 
 		class InputParser : public MAESTROClass {
