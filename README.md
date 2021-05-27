@@ -18,6 +18,7 @@ We updated the naming convention of mappings and the directory structure of data
 
 ### May 26th, 2021
 We updated the hardware description file: off-chip bandwidth added as constraint.
+
 We added validation folder with data for eyeriss and maeri.
 
 # Contributors
