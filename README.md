@@ -16,6 +16,10 @@ We added a direct support for GEMM layers. For more information, please take a l
 
 We updated the naming convention of mappings and the directory structure of data folder.
 
+### May 26th, 2021
+We updated the hardware description file: off-chip bandwidth added as constraint.
+We added validation folder with data for eyeriss and maeri.
+
 # Contributors
 - Hyoukjun Kwon (hyoukjun@gatech.edu): Main developer, developed core framework and functionalities
 - Prasanth Chatarasi (cprasanth@gatech.edu): Improved APIs
