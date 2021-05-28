@@ -26,6 +26,26 @@ We updated the naming convention of mappings and the directory structure of data
 
 Latest codebase released along with MAESTRO MICRO 2019 paper.
 
+### Citation ###
+```
+@inproceedings{maestro_micro2019,
+  author    = {Hyoukjun Kwon and
+               Prasanth Chatarasi and
+               Michael Pellauer and
+               Angshuman Parashar and
+               Vivek Sarkar and
+               Tushar Krishna},
+  title     = {Understanding Reuse, Performance, and Hardware Cost of {DNN} Dataflow:
+               {A} Data-Centric Approach},
+  booktitle = {Proceedings of the 52nd Annual {IEEE/ACM} International Symposium
+               on Microarchitecture, {MICRO}},
+  pages     = {754--768},
+  publisher = {{ACM}},
+  year      = {2019},
+}
+
+```
+
  # Maintainers
 - Felix (Sheng-Chun) Kao (felix@gatech.edu)
 - Geonhwa Jeong (geonhwa.jeong@gatech.edu)
