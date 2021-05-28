@@ -7,7 +7,10 @@ MAESTRO is an open-source tool for modeling and evaluating the performance and e
 - [MAESTRO Website](http://maestro.ece.gatech.edu/)
 - [MAESTRO Docs](http://maestro.ece.gatech.edu/docs/build/html/index.html)
 
-# Notices
+
+# Codebase
+
+## Updates
 ### May 26th, 2021
 
 We updated the hardware description file, added off-chip bandwidth added as constraint.
@@ -26,7 +29,21 @@ We updated the naming convention of mappings and the directory structure of data
 
 Latest codebase released along with MAESTRO MICRO 2019 paper.
 
-### Citation ###
+
+## Maintainers
+- Felix (Sheng-Chun) Kao (felix@gatech.edu)
+- Geonhwa Jeong (geonhwa.jeong@gatech.edu)
+- Tushar Krishna (tushar@ece.gatech.edu)
+
+
+## Technical Contributors
+- Hyoukjun Kwon (Georgia Tech, now at Facebook Reality Labs): Main developer (core framework and functionalities)
+- Prasanth Chatarasi (Georgia Tech, now at IBM Research): APIs + interface to mapping optimizers.
+- Felix (Sheng-Chun) Kao (Georgia Tech): Pytorch frontend + updates to cost-model/interface + GAMMA mapper
+- Geonhwa Jeong (Georgia Tech): Keras frontend + debugging + website maintainer.
+- Saurabh Malik (Georgia Tech, now at Microsoft): Jupyter Notebooks demo + website.
+
+# Citations ###
 ```
 @inproceedings{maestro_micro2019,
   author    = {Hyoukjun Kwon and
@@ -45,16 +62,20 @@ Latest codebase released along with MAESTRO MICRO 2019 paper.
 }
 
 ```
-
- # Maintainers
-- Felix (Sheng-Chun) Kao (felix@gatech.edu)
-- Geonhwa Jeong (geonhwa.jeong@gatech.edu)
-- Tushar Krishna (tushar@ece.gatech.edu)
-
-
-# Technical Contributors
-- Hyoukjun Kwon (Georgia Tech, now at Facebook Reality Labs): Main developer (core framework and functionalities)
-- Prasanth Chatarasi (Georgia Tech, now at IBM Research): APIs + interface to mapping optimizers.
-- Felix (Sheng-Chun) Kao (Georgia Tech): Pytorch frontend + updates to cost-model/interface + GAMMA mapper
-- Geonhwa Jeong (Georgia Tech): Keras frontend + debugging + website maintainer.
-- Saurabh Malik (Georgia Tech, now at Microsoft): Jupyter Notebooks demo + website.
+```
+@article{maestro_toppicks2020,
+  author    = {Hyoukjun Kwon and
+               Prasanth Chatarasi and
+               Vivek Sarkar and
+               Tushar Krishna and
+               Michael Pellauer and
+               Angshuman Parashar},
+  title     = {{MAESTRO:} {A} Data-Centric Approach to Understand Reuse, Performance,
+               and Hardware Cost of {DNN} Mappings},
+  journal   = {{IEEE} Micro},
+  volume    = {40},
+  number    = {3},
+  pages     = {20--29},
+  year      = {2020},
+}
+```
