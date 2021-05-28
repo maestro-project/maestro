@@ -534,6 +534,24 @@ namespace maestro {
                   switch(curr_directive_class) {
                   case DFA::directive::DirectiveClass::TemporalMap: {
                     curr_directive = std::make_shared<DFA::directive::TemporalMap> (map_size, map_offset, tkn);
+                    //felix20210528
+                    if (tkn=="R" or tkn=="S"){
+                      if (map_size != map_offset){
+                        std::cout<<"[Error] Invalid mapping: ";
+                        ParseError(line_number);
+//                        std::cout<<"[Warning] Invalid mapping: Line_number: " << line_number << ":"<< line<<std::endl;
+                      }
+                      for (auto d: *dim_vector){
+                        if (d->GetName() == tkn){
+                          if(d->GetSize() != map_size){
+                            std::cout<<"[Error] Invalid mapping: ";
+                            ParseError(line_number);
+//                            std::cout<<"[Warning] Invalid mapping: Line_number: " << line_number << ":"<< line<<std::endl;
+                          }
+                        }
+                      }
+                    }
+                    //
                     break;
                   }
                   case DFA::directive::DirectiveClass::SpatialMap: {
