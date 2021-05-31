@@ -537,15 +537,16 @@ namespace maestro {
                     //felix20210528
                     if (tkn=="R" or tkn=="S"){
                       if (map_size != map_offset){
-                        std::cout<<"[Error] Invalid mapping: ";
-                        ParseError(line_number);
+                        std::cout<<"[Error] Invalid mapping at line number: "<< line_number<<" in " <<file_name_<< ". Tile size of "<<tkn<<"("<<map_size<<") should be equal to tile offset of "<<tkn<<"("<<map_offset<<")."<<std::endl;
+                        exit(-1);
 //                        std::cout<<"[Warning] Invalid mapping: Line_number: " << line_number << ":"<< line<<std::endl;
                       }
                       for (auto d: *dim_vector){
                         if (d->GetName() == tkn){
                           if(d->GetSize() != map_size){
-                            std::cout<<"[Error] Invalid mapping: ";
-                            ParseError(line_number);
+//                            std::cout<<"[Error] Invalid mapping: ";
+                            std::cout<<"[Error] Invalid mapping at line number: "<< line_number<<" in " <<file_name_<<". Tile size of "<<tkn<<"("<<map_size<<") should be equal to dimension size of "<<tkn<<"("<<d->GetSize()<<")."<<std::endl;
+                            exit(-1);
 //                            std::cout<<"[Warning] Invalid mapping: Line_number: " << line_number << ":"<< line<<std::endl;
                           }
                         }
