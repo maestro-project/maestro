@@ -203,13 +203,13 @@ namespace maestro {
             }
 
 
-//            if(num_partial_sums <= 0) {
+            if(num_partial_sums <= 0) {
 //              std::cout << "Num partial sums is less than 0!" << std::endl;
-//              if(write_log_file && cluster_idx <= print_cluster_lv) {
-//                log_file << "Skipping Invalid case" << std::endl;
-//              }
-//              continue;
-//            }
+              if(write_log_file && cluster_idx <= print_cluster_lv) {
+                log_file << "Skipping Invalid case" << std::endl;
+              }
+              continue;
+            }
 
 
             for(auto& tensor : *input_tensors) {
