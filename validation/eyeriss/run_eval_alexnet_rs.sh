@@ -3,7 +3,7 @@
           --print_res=true \
           --print_res_csv_file=true \
           --print_log_file=false \
-             --noc_bw=1000000000 \
+          --noc_bw=14 \
           --noc_hop_latency=1 \
           --noc_mc_support=true \
           --num_pes=168 \

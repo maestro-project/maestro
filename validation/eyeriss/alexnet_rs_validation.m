@@ -50,6 +50,8 @@ Dimensions { N 4, K 384, C 256, R 3, S 3, Y 15, X 15 }
     TemporalMap(4,4) C;
     TemporalMap(13,13) Y';
     TemporalMap(15,13) X;
+    TemporalMap(Sz(R),Sz(R)) R;
+    TemporalMap(Sz(S),Sz(S)) S;    
     Cluster(13, P);
     TemporalMap(4,4) N;
     TemporalMap(16,16) K;
@@ -86,6 +88,8 @@ Dimensions { N 4, K 384,C 192, R 3, S 3, Y 15, X 15 }
     TemporalMap(16,16) K;
     TemporalMap(13,13) Y';
     TemporalMap(1,1) X';    
+    TemporalMap(Sz(R),Sz(R)) R;
+    TemporalMap(Sz(S),Sz(S)) S;     
     Cluster(13, P);
     TemporalMap(4,4) N;
     TemporalMap(3,3) C;
