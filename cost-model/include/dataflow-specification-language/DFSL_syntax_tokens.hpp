@@ -55,9 +55,12 @@ namespace maestro {
       const std::string layer_type_ngconv_ = "NGCONV"; // Nested grouped convolution (ResNeXt)
       const std::string layer_type_lstm_ = "LSTM";
       const std::string layer_type_gemm_ = "GEMM";
+      const std::string layer_type_bmm_ = "BMM";
+
     const std::string layer_stride_decl_ = "Stride";
 
     const std::string layer_dim_decl_ = "Dimensions";
+      const std::string layer_dim_bmm_batch_    = "B";    
       const std::string layer_dim_input_batch_    = "N";
       const std::string layer_dim_group_          = "G";
       const std::string layer_dim_output_channel_ = "K";

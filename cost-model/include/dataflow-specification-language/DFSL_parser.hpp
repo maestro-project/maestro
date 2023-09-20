@@ -314,6 +314,16 @@ namespace maestro {
                     }
                     layer_type = LayerType::GEMM;
                   }
+                  else if(tkn == DFSL::layer_type_bmm_) {
+                    if(!tmp_name.empty()) {
+                      curr_layer = std::make_shared<DFA::BMMLayer>(tmp_name);
+                      tmp_name.clear();
+                    }
+                    else {
+                      curr_layer = std::make_shared<DFA::BMMLayer>(DFSL::layer_decl_);
+                    }
+                    layer_type = LayerType::BMM;
+                  }                  
                   else if(tkn == DFSL::layer_type_fc_) {
                     //TODO
                   }

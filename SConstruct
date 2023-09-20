@@ -23,4 +23,3 @@ env.Append(CPPPATH = Split(includes))
 #env.Program('maestro', ['maestro-top.cpp', 'lib/src/maestro_v3.cpp', 'lib/src/BASE_base-objects.cpp' ])
 env.Program('maestro', ['maestro-top.cpp', 'cost-model/src/BASE_base-objects.cpp' ])
 #env.Library('maestro', ['maestro-top.cpp', 'lib/src/maestro_v3.cpp', 'lib/src/BASE_base-objects.cpp' ])
-

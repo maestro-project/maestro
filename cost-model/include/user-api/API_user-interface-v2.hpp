@@ -532,6 +532,12 @@ namespace maestro {
             output_coupled_vars = {"M", "N"};
             break;
           }
+          case (LayerType::BMM): {
+            input_coupled_vars =  {"B", "M", "K"};
+            weight_coupled_vars = {"B", "K", "N"};
+            output_coupled_vars = {"B", "M", "N"};
+            break;
+          }          
           case (LayerType::CONV):
           default : {
             if(batch_processing) {
@@ -672,6 +678,13 @@ namespace maestro {
               }
               break;
             }
+            case (LayerType::BMM) : {
+              for(auto dim : *dimensions) {
+                auto dimtbl_entry = std::make_shared<DFA::LayerDimension>(dim->GetName(), dim->GetSize(), dim->GetOuterStride(), dim->GetInnerStride());
+                dimension_table->AddDimension(dimtbl_entry);
+              }
+              break;
+            }            
             default: {
             }
         }
@@ -749,6 +762,16 @@ namespace maestro {
               }
               break;
             }
+            case (LayerType::BMM): {
+              if(tensor_info_mapping_table_->find(layer_type) == tensor_info_mapping_table_->end()) {
+                tensor_info_idx = ConfigConvTensors(layer_type, false);
+                (*tensor_info_mapping_table_)[layer_type] = tensor_info_idx;
+              }
+              else {
+                tensor_info_idx = (*tensor_info_mapping_table_)[layer_type];
+              }
+              break;
+            }            
             default: {
               //TODO: Add generic/custom dimension table construction
 //              dimension_table->AddOverlapDimensions(overlap_dim_list);
