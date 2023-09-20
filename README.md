@@ -11,6 +11,11 @@ MAESTRO is an open-source tool for modeling and evaluating the performance and e
 # Codebase
 
 ## Updates
+
+### Sep 20th, 2023
+
+We updated batched matrix multiplication operator support. Please see /data/mapping/BMM_Example.m for its usage.
+
 ### May 26th, 2021
 
 We updated the hardware description file, added off-chip bandwidth added as constraint.
