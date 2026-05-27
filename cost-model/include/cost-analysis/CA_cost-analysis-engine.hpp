@@ -322,6 +322,9 @@ namespace maestro {
                   std::ceil(static_cast<double>(num_partial_sums) / static_cast<double>(num_simd_lanes_)));
             }
             ////////////////////////////
+		//Gaurd against 0 computation_delay before divisions below
+		//Can occur when Cluster directives produce empty iteration states
+		if(computation_delay==0){computation_delay=1;}
 
             long ingress_comm_delay = noc->GetOutStandingDelay(ingress_spatial_traffic);
             long egress_comm_delay = noc->GetOutStandingDelay(egress_spatial_traffic);
