@@ -192,8 +192,12 @@ namespace maestro {
                 iter_state_list->push_back(edge_state);
               }
             } // End of else if (directive_class == SpatialMap)
-
-            valid_iteration_states_->push_back(iter_state_list);
+	     //Cluster directives define PE grouping, not iteration order.
+	     //Pushing an empty iter_state_list causes num_total_cases=0
+	     //and downstream out-of-bounds access. So we should skip push for cluster.
+       	     if(directive_class!=DFA::directive::DirectiveClass::Cluster){
+            	valid_iteration_states_->push_back(iter_state_list);
+	     }
           } // End of for_each (directive in dataflow)
         } // End of void AnalyzeIterationStates
 
